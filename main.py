@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw, ImageTk, ImageFilter
 import io
+import os
 
 class KidsDrawingApp:
     def __init__(self, root):
@@ -29,6 +30,9 @@ class KidsDrawingApp:
         # History stack for undo and redo
         self.undo_stack = []
         self.redo_stack = []
+
+        # Directory for assets
+        self.assets_directory = 'Assets'  # Update to your 'Assets' folder
 
         # Buttons and Options
         self.create_widgets()
@@ -114,20 +118,21 @@ class KidsDrawingApp:
         self.canvas.image = self.canvas_image  # Keep reference to avoid garbage collection
 
     def load_mini_pictures(self):
-        mini_pics = ["outline1.jpg", "outline2.jpg", "outline3.jpg", "outline4.jpg", "outline5.jpg", "outline6.jpg"]  # Add paths to your outline images
+        mini_pics = [f"outline{i}.jpg" for i in range(1, 7)]  # Update file names as needed
         self.mini_pic_images = []
 
         for pic in mini_pics:
+            pic_path = os.path.join(self.assets_directory, pic)
             try:
-                print(f"Trying to load image: {pic}")  # Debug print statement
-                img = Image.open(pic).resize((100, 100), Image.LANCZOS)  # Resize to fit
+                print(f"Trying to load image: {pic_path}")  # Debug print statement
+                img = Image.open(pic_path).resize((100, 100), Image.LANCZOS)  # Resize to fit
                 img_tk = ImageTk.PhotoImage(img)
                 label = tk.Label(self.mini_pics_frame, image=img_tk)
                 label.image = img_tk  # Keep a reference to avoid garbage collection
                 label.pack(side=tk.LEFT, padx=5, pady=5)
 
                 # Bind click event to load the outline on the canvas
-                label.bind("<Button-1>", lambda event, image_path=pic: self.load_outline(image_path))
+                label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                 self.mini_pic_images.append(label)
 
             except Exception as e:
