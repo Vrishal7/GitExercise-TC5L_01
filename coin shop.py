@@ -25,7 +25,7 @@ class KidsColouringApp:
         self.level_var=tk.StringVar(value='easy')
         tk.Radiobutton(self.root,text="Easy Level",variable=self.level_var,value='easy',command=self.update_page_list).pack()
 
-        self.page_listbox=tk.Listbox(self.root,width=30)
+        self.page_listbox=tk.Listbox(self.root,width=30) #list the levels (example)
         self.page_listbox.pack(pady=10)
 
         # add button to redeem coins
@@ -46,8 +46,8 @@ class KidsColouringApp:
     def complete_page(self):
         current_level = self.level_var.get()
         if current_level == 'easy':
-            self.coins +=2
-            messagebox.showinfo('Good job','You have completed an Easy colouring page')
+            self.coins +=2 
+            messagebox.showinfo('Good job','You have completed an Easy colouring page') #display msg
 
             self.coins_label.config(text=f'Coins:{self.coins}')
 
