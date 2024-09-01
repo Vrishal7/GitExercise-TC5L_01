@@ -65,6 +65,8 @@ class KidsDrawingApp:
         save_button.pack(side=tk.LEFT, padx=5)
 
         # Clear Button
+        
+        # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
         clear_button.pack(side=tk.LEFT, padx=5)
 
@@ -231,3 +233,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = KidsDrawingApp(root)
     root.mainloop()
+
