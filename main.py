@@ -119,8 +119,15 @@ class KidsDrawingApp:
 
     def load_mini_pictures(self):
         levels = {
-            "Level 1": [f"outline{i}.jpg" for i in range(1, 7)],  # Add more levels as needed
+            "Level 1": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
+
+        start_y = 0
+        row_height = 90 + 5  # Height of images plus padding
 
         for level, mini_pics in levels.items():
             # Create a label for the level
@@ -131,7 +138,7 @@ class KidsDrawingApp:
             level_frame = tk.Frame(self.mini_pics_frame)
             level_frame.pack(side=tk.TOP, fill=tk.X)
 
-            for pic in mini_pics:
+            for i, pic in enumerate(mini_pics):
                 pic_path = os.path.join(self.assets_directory, pic)
                 print(f"Attempting to load image: {pic_path}")  # Debug: Print the image path
 
@@ -144,7 +151,7 @@ class KidsDrawingApp:
                     img_tk = ImageTk.PhotoImage(img)
                     label = tk.Label(level_frame, image=img_tk)
                     label.image = img_tk  # Keep a reference to avoid garbage collection
-                    label.pack(side=tk.LEFT, padx=5, pady=5)
+                    label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
 
                     # Bind click event to load the outline on the canvas
                     label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
@@ -152,6 +159,9 @@ class KidsDrawingApp:
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
+
+            # Update starting y position for the next level
+            start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
     def load_outline(self, image_path):
         try:
