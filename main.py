@@ -13,6 +13,9 @@ class KidsDrawingApp:
         self.canvas_width = 900
         self.canvas_height = 900
 
+        # Coin system
+        self.coins=0
+
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
@@ -45,6 +48,10 @@ class KidsDrawingApp:
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
+
+        # Display coins
+        self.coins_label=tk.Label(toolbar,text=f"Coins:{self.coins}",font=("Arial",14))
+        self.coins_label.pack(side=tk.LEFT,padx=5)
 
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
@@ -118,25 +125,50 @@ class KidsDrawingApp:
         self.canvas.image = self.canvas_image  # Keep reference to avoid garbage collection
 
     def load_mini_pictures(self):
-        mini_pics = [f"outline{i}.jpg" for i in range(1, 7)]  # Update file names as needed
-        self.mini_pic_images = []
+        levels = {
+            "Level 1": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
+        }
 
-        for pic in mini_pics:
-            pic_path = os.path.join(self.assets_directory, pic)
-            try:
-                print(f"Trying to load image: {pic_path}")  # Debug print statement
-                img = Image.open(pic_path).resize((100, 100), Image.LANCZOS)  # Resize to fit
-                img_tk = ImageTk.PhotoImage(img)
-                label = tk.Label(self.mini_pics_frame, image=img_tk)
-                label.image = img_tk  # Keep a reference to avoid garbage collection
-                label.pack(side=tk.LEFT, padx=5, pady=5)
+        start_y = 0
+        row_height = 90 + 5  # Height of images plus padding
 
-                # Bind click event to load the outline on the canvas
-                label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
-                self.mini_pic_images.append(label)
+        for level, mini_pics in levels.items():
+            # Create a label for the level
+            level_label = tk.Label(self.mini_pics_frame, text=level, font=("Arial", 12, "bold"))
+            level_label.pack(side=tk.TOP, anchor=tk.W, pady=5)
 
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to load mini picture: {e}")
+            # Create a frame for this level's images
+            level_frame = tk.Frame(self.mini_pics_frame)
+            level_frame.pack(side=tk.TOP, fill=tk.X)
+
+            for i, pic in enumerate(mini_pics):
+                pic_path = os.path.join(self.assets_directory, pic)
+                print(f"Attempting to load image: {pic_path}")  # Debug: Print the image path
+
+                try:
+                    if not os.path.exists(pic_path):
+                        print(f"Image not found: {pic_path}")  # Debug: Image not found
+                        continue  # Skip to the next image
+
+                    img = Image.open(pic_path).resize((90, 90), Image.LANCZOS)  # Resize to fit
+                    img_tk = ImageTk.PhotoImage(img)
+                    label = tk.Label(level_frame, image=img_tk)
+                    label.image = img_tk  # Keep a reference to avoid garbage collection
+                    label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
+
+                    # Bind click event to load the outline on the canvas
+                    label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
+                    print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
+
+                except Exception as e:
+                    print(f"Failed to load mini picture: {e}")  # Debug: Print error details
+
+            # Update starting y position for the next level
+            start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
     def load_outline(self, image_path):
         try:
@@ -201,28 +233,29 @@ class KidsDrawingApp:
                 self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
                 self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
             else:
+                # Draw a brush stroke
                 self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
                 self.draw.ellipse([x1, y1, x2, y2], fill=self.color, outline=self.color)
-            self.update_canvas()
 
     def change_brush_size(self, event):
         self.brush_size = event.widget.get()
 
     def choose_color(self):
-        self.color = colorchooser.askcolor(color=self.color)[1]
+        color = colorchooser.askcolor()[1]
+        if color:
+            self.color = color
+            self.eraser_mode = False  # Disable eraser when choosing a color
+            self.eraser_button.config(relief=tk.RAISED)  # Reset eraser button appearance
 
     def toggle_eraser(self):
-        """ Toggle between drawing and eraser mode """
         self.eraser_mode = not self.eraser_mode
         if self.eraser_mode:
-            self.color = 'white'  # Set the color to white for erasing
             self.eraser_button.config(relief=tk.SUNKEN)
         else:
-            self.color = 'black'  # Reset to default color
             self.eraser_button.config(relief=tk.RAISED)
 
     def clear_canvas(self):
-        self.save_state()  # Save state before clearing
+        self.save_state()  # Save current state before clearing
         self.canvas.delete("all")
         self.image = Image.new("RGB", (self.canvas_width, self.canvas_height), "white")
         self.draw = ImageDraw.Draw(self.image)
