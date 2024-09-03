@@ -13,6 +13,9 @@ class KidsDrawingApp:
         self.canvas_width = 900
         self.canvas_height = 900
 
+        # Coin system
+        self.coins=0
+
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
@@ -45,6 +48,10 @@ class KidsDrawingApp:
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
+
+        # Display coins
+        self.coins_label=tk.Label(toolbar,text=f"Coins:{self.coins}",font=("Arial",14))
+        self.coins_label.pack(side=tk.LEFT,padx=5)
 
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
