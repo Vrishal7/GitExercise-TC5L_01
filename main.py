@@ -10,8 +10,8 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 300
-        self.canvas_height = 300
+        self.canvas_width = 900
+        self.canvas_height = 900
 
         # Coin system
         self.coins=0
@@ -86,7 +86,7 @@ class KidsDrawingApp:
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=5)
 
-        #Complete page button for level 1
+        #Complete page button (level 1)
         self.complete_page_button=tk.Button(toolbar, text='Complete Page',command=self.complete_page)
         self.complete_page_button.pack(side=tk.LEFT,padx=5)
 
@@ -108,7 +108,7 @@ class KidsDrawingApp:
             self.coins +=10
             self.coins_label.config(text=f"Coins : {self.coins}")    
             self.current_page +=1
-            messagebox.showinfo("Good job !","You'have earned 10 coins !")
+            messagebox.showinfo("Good job!","You have earned 10 coins !")
 
     def save_state(self):
         """ Save the current state of the image to the undo stack """
