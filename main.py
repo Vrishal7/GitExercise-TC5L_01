@@ -10,12 +10,15 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 900
-        self.canvas_height = 900
+        self.canvas_width = 300
+        self.canvas_height = 300
 
         # Coin system
         self.coins=0
 
+        # Track current page in level 1
+        self.current_page=0
+       
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
@@ -83,6 +86,10 @@ class KidsDrawingApp:
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=5)
 
+        #Complete page button for level 1
+        self.complete_page_button=tk.Button(toolbar, text='Complete Page',command=self.complete_page)
+        self.complete_page_button.pack(side=tk.LEFT,padx=5)
+
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
         right_frame.pack(side=tk.RIGHT, fill=tk.Y)
@@ -94,6 +101,14 @@ class KidsDrawingApp:
         self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
         self.load_mini_pictures()
+
+    def complete_page(self):
+        """Add coins after 1 page is completed"""
+        if self.current_page < 6:
+            self.coins +=10
+            self.coins_label.config(text=f"Coins : {self.coins}")    
+            self.current_page +=1
+            messagebox.showinfo("Good job !","You'have earned 10 coins !")
 
     def save_state(self):
         """ Save the current state of the image to the undo stack """
