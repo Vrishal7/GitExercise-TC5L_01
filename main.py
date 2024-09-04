@@ -147,7 +147,7 @@ class KidsDrawingApp:
         }
 
 
-
+       # lock the pages
         self.unlocked_pages={
             "Level 2":[False]*6,
             "Level 3":[False]*6,
@@ -185,7 +185,7 @@ class KidsDrawingApp:
                     #check if level is unlocked
 
                     if level != "Level 1" and not self.unlocked_pages[level][i]:
-                     label.config (state="disabled") 
+                     label.config (state="disabled") #cannot click 
                     else:
                     # Bind click event to load the outline on the canvas
                      label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
