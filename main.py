@@ -16,7 +16,9 @@ class KidsDrawingApp:
         # Coin system
         self.coins=0
 
-    
+        #current page tracking
+        self.current_page =0
+
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
