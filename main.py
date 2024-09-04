@@ -192,9 +192,15 @@ class KidsDrawingApp:
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
-
+    
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
+    def complete_page(self,level,i):
+            if not self.completed_pages[level][i]:
+                self.completed_pages[level][i]=True
+                self.coins +=10 #earn 10 coins level 1
+                self.coins_label.config(text=f"Coins :{self.coins}")
+                messagebox.showinfo("Congratulations !", "You have earned 10 coins")        
 
     def load_outline(self, image_path):
         try:
