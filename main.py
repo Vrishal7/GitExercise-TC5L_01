@@ -10,8 +10,8 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 300
-        self.canvas_height = 300
+        self.canvas_width = 900
+        self.canvas_height = 900
 
         # Coin system
         self.coins=0
@@ -64,31 +64,31 @@ class KidsDrawingApp:
 
         # Color Button
         color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
-        color_button.pack(side=tk.LEFT, padx=5)
+        color_button.pack(side=tk.LEFT, padx=3)
 
         # Eraser Button
         self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
-        self.eraser_button.pack(side=tk.LEFT, padx=5)
+        self.eraser_button.pack(side=tk.LEFT, padx=3)
 
         # Save Button
         save_button = tk.Button(toolbar, text="Save Drawing")
-        save_button.pack(side=tk.LEFT, padx=5)
+        save_button.pack(side=tk.LEFT, padx=3)
 
         # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
-        clear_button.pack(side=tk.LEFT, padx=5)
+        clear_button.pack(side=tk.LEFT, padx=3)
 
         # Undo Button
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
-        undo_button.pack(side=tk.LEFT, padx=5)
+        undo_button.pack(side=tk.LEFT, padx=3)
 
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
-        redo_button.pack(side=tk.LEFT, padx=5)
+        redo_button.pack(side=tk.LEFT, padx=3)
 
         #Complete page button (level 1)
-        self.complete_page_button=tk.Button(toolbar, text='Complete Page',command=self.complete_page)
-        self.complete_page_button.pack(side=tk.LEFT,padx=5)
+        self.complete_page_button=tk.Button(toolbar, text='Complete',command=self.complete_page)
+        self.complete_page_button.pack(side=tk.LEFT,padx=0)
 
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
