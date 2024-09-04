@@ -10,15 +10,13 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 900
-        self.canvas_height = 900
+        self.canvas_width = 300
+        self.canvas_height = 300
 
         # Coin system
         self.coins=0
 
-        # Track current page in level 1
-        self.current_page=0
-       
+    
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
@@ -148,6 +146,15 @@ class KidsDrawingApp:
             "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
+
+
+        self.unlocked_pages={
+            "Level 2":[False]*6,
+            "Level 3":[False]*6,
+            "Level 4":[False]*6,
+            "Level 5":[False]*6,
+
+        }
         start_y = 0
         row_height = 90 + 5  # Height of images plus padding
 
@@ -175,8 +182,13 @@ class KidsDrawingApp:
                     label.image = img_tk  # Keep a reference to avoid garbage collection
                     label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
 
+                    #check if level is unlocked
+
+                    if level != "Level 1" and not self.unlocked_pages[level][i]:
+                     label.config (state="disabled") 
+                    else:
                     # Bind click event to load the outline on the canvas
-                    label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
+                     label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
 
                 except Exception as e:

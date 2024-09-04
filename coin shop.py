@@ -42,7 +42,6 @@ class KidsColouringApp:
             for page in self.easy_level:
                 self.page_listbox.insert(tk.END,page)
 
-    # add coins once completed page
     def complete_page(self):
         current_level = self.level_var.get()
         if current_level == 'easy':
