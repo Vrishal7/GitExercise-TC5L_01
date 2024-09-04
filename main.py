@@ -187,7 +187,7 @@ class KidsDrawingApp:
                     if level == "Level 1" and i % 2 != 0:
                         complete_button=tk.Button(level_frame,text="Complete Page",command=lambda level=level, i=i: self.complete_page(level,i))
                         complete_button.grid(row=i // 6 + 1,column=i % 6,padx=5, pady=3)
-                        self.complete_buttons=self.complete_buttons or {}
+                        self.complete_buttons= self.complete_buttons
                         self.complete_buttons[(level,i)]=complete_button
 
                 except Exception as e:
@@ -195,12 +195,20 @@ class KidsDrawingApp:
     
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
+
     def complete_page(self,level,i):
             if not self.completed_pages[level][i]:
                 self.completed_pages[level][i]=True
                 self.coins +=10 #earn 10 coins level 1
                 self.coins_label.config(text=f"Coins :{self.coins}")
-                messagebox.showinfo("Congratulations !", "You have earned 10 coins")        
+                messagebox.showinfo("Congratulations !", "You have earned 10 coins")
+
+      #disable button after clicking once
+            complete_button=self.complete_buttons.get((level,i))
+            if complete_button:
+               complete_button.config(state="disabled")
+            else:
+               messagebox.showinfo("Looks like you have already completed this page! ")   
 
     def load_outline(self, image_path):
         try:
