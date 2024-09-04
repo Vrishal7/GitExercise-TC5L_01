@@ -10,8 +10,8 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 900
-        self.canvas_height = 900
+        self.canvas_width = 300
+        self.canvas_height = 300
 
         # Coin system
         self.coins=0
@@ -48,6 +48,9 @@ class KidsDrawingApp:
         self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
         self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
 
+        #track completed page
+        self.completed_pages={"Level 1":[False]*6}
+        
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -64,31 +67,27 @@ class KidsDrawingApp:
 
         # Color Button
         color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
-        color_button.pack(side=tk.LEFT, padx=3)
+        color_button.pack(side=tk.LEFT, padx=5)
 
         # Eraser Button
         self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
-        self.eraser_button.pack(side=tk.LEFT, padx=3)
+        self.eraser_button.pack(side=tk.LEFT, padx=5)
 
         # Save Button
         save_button = tk.Button(toolbar, text="Save Drawing")
-        save_button.pack(side=tk.LEFT, padx=3)
+        save_button.pack(side=tk.LEFT, padx=5)
 
         # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
-        clear_button.pack(side=tk.LEFT, padx=3)
+        clear_button.pack(side=tk.LEFT, padx=5)
 
         # Undo Button
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
-        undo_button.pack(side=tk.LEFT, padx=3)
+        undo_button.pack(side=tk.LEFT, padx=5)
 
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
-        redo_button.pack(side=tk.LEFT, padx=3)
-
-        #Complete page button (level 1)
-        self.complete_page_button=tk.Button(toolbar, text='Complete',command=self.complete_page)
-        self.complete_page_button.pack(side=tk.LEFT,padx=0)
+        redo_button.pack(side=tk.LEFT, padx=5)
 
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
@@ -101,14 +100,6 @@ class KidsDrawingApp:
         self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
         self.load_mini_pictures()
-
-    def complete_page(self):
-        """Add coins after 1 page is completed"""
-        if self.current_page < 6:
-            self.coins +=10
-            self.coins_label.config(text=f"Coins : {self.coins}")    
-            self.current_page +=1
-            messagebox.showinfo("Good job!","You have earned 10 coins !")
 
     def save_state(self):
         """ Save the current state of the image to the undo stack """
@@ -192,6 +183,12 @@ class KidsDrawingApp:
                     # Bind click event to load the outline on the canvas
                      label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
+
+                    if level == "Level 1" and i % 2 != 0:
+                        complete_button=tk.Button(level_frame,text="Complete Page",command=lambda level=level, i=i: self.complete_page(level,i))
+                        complete_button.grid(row=i // 6 + 1,column=i % 6,padx=5, pady=3)
+                        self.complete_buttons=self.complete_buttons or {}
+                        self.complete_buttons[(level,i)]=complete_button
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
