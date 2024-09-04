@@ -10,8 +10,8 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 300
-        self.canvas_height = 300
+        self.canvas_width = 900
+        self.canvas_height = 900
 
         # Coin system
         self.coins=0
