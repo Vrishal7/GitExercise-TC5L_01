@@ -14,10 +14,12 @@ class KidsDrawingApp:
         self.canvas_height = 900
 
         # Coin system
-        self.coins=0
+        self.coins = 0
 
-        #current page tracking
-        self.current_page =0
+        # Timer variables
+        self.timer_duration = 30 * 60  # 30 minutes in seconds
+        self.time_left = self.timer_duration
+        self.timer_running = False
 
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
@@ -48,46 +50,50 @@ class KidsDrawingApp:
         self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
         self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
 
-        #track completed page
-        self.completed_pages={"Level 1":[False]*6}
-        
+        # Track completed pages
+        self.completed_pages = {"Level 1": [False] * 6}
+
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
 
         # Display coins
-        self.coins_label=tk.Label(toolbar,text=f"Coins:{self.coins}",font=("Arial",14))
-        self.coins_label.pack(side=tk.LEFT,padx=5)
+        self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
+        self.coins_label.pack(side=tk.LEFT, padx=1)
 
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
         size_slider.set(self.brush_size)
-        size_slider.pack(side=tk.LEFT, padx=5)
+        size_slider.pack(side=tk.LEFT, padx=1)
         size_slider.bind("<Motion>", self.change_brush_size)
 
         # Color Button
         color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
-        color_button.pack(side=tk.LEFT, padx=5)
+        color_button.pack(side=tk.LEFT, padx=1)
 
         # Eraser Button
         self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
-        self.eraser_button.pack(side=tk.LEFT, padx=5)
+        self.eraser_button.pack(side=tk.LEFT, padx=1)
 
         # Save Button
-        save_button = tk.Button(toolbar, text="Save Drawing")
-        save_button.pack(side=tk.LEFT, padx=5)
+        save_button = tk.Button(toolbar, text="Save Drawing", command=self.save_drawing)
+        save_button.pack(side=tk.LEFT, padx=1)
 
         # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
-        clear_button.pack(side=tk.LEFT, padx=5)
+        clear_button.pack(side=tk.LEFT, padx=1)
 
         # Undo Button
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
-        undo_button.pack(side=tk.LEFT, padx=5)
+        undo_button.pack(side=tk.LEFT, padx=1)
 
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
-        redo_button.pack(side=tk.LEFT, padx=5)
+        redo_button.pack(side=tk.LEFT, padx=1)
+
+        # Timer Label
+        self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
+        self.timer_label.pack(side=tk.RIGHT, padx=1)
 
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
@@ -139,15 +145,14 @@ class KidsDrawingApp:
             "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
-
-       # lock the pages
-        self.unlocked_pages={
-            "Level 2":[False]*6,
-            "Level 3":[False]*6,
-            "Level 4":[False]*6,
-            "Level 5":[False]*6,
-
+        # Lock the pages
+        self.unlocked_pages = {
+            "Level 2": [False] * 6,
+            "Level 3": [False] * 6,
+            "Level 4": [False] * 6,
+            "Level 5": [False] * 6,
         }
+
         start_y = 0
         row_height = 90 + 5  # Height of images plus padding
 
@@ -175,20 +180,18 @@ class KidsDrawingApp:
                     label.image = img_tk  # Keep a reference to avoid garbage collection
                     label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
 
-                    #check if level is unlocked
-
+                    # Check if level is unlocked
                     if level != "Level 1" and not self.unlocked_pages[level][i]:
-                     label.config (state="disabled") #cannot click 
+                        label.config(state="disabled")  # Cannot click
                     else:
-                    # Bind click event to load the outline on the canvas
-                     label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
+                        # Bind click event to load the outline on the canvas
+                        label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
 
                     if level == "Level 1" and i % 2 != 0:
-                        complete_button=tk.Button(level_frame,text="Complete Page",command=lambda level=level, i=i: self.complete_page(level,i))
-                        complete_button.grid(row=i // 6 + 1,column=i % 6,padx=5, pady=3)
-                        self.complete_buttons= self.complete_buttons
-                        self.complete_buttons[(level,i)]=complete_button
+                        complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
+                        complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
+                        self.complete_buttons[(level, i)] = complete_button
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
@@ -196,19 +199,19 @@ class KidsDrawingApp:
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
-    def complete_page(self,level,i):
-            if not self.completed_pages[level][i]:
-                self.completed_pages[level][i]=True
-                self.coins +=10 #earn 10 coins level 1
-                self.coins_label.config(text=f"Coins :{self.coins}")
-                messagebox.showinfo("Congratulations !", "You have earned 10 coins")
+    def complete_page(self, level, i):
+        if not self.completed_pages[level][i]:
+            self.completed_pages[level][i] = True
+            self.coins += 10  # Earn 10 coins for Level 1
+            self.coins_label.config(text=f"Coins: {self.coins}")
+            messagebox.showinfo("Congratulations!", "You have earned 10 coins")
 
-      #disable button after clicking once
-            complete_button=self.complete_buttons.get((level,i))
+            # Disable button after clicking once
+            complete_button = self.complete_buttons.get((level, i))
             if complete_button:
-               complete_button.config(state="disabled")
-            else:
-               messagebox.showinfo("Looks like you have already completed this page! ")   
+                complete_button.config(state="disabled")
+        else:
+            messagebox.showinfo("Looks like you have already completed this page!")
 
     def load_outline(self, image_path):
         try:
@@ -235,6 +238,9 @@ class KidsDrawingApp:
             self.image = outline_image_resized.copy()
             self.draw = ImageDraw.Draw(self.image)
 
+            # Start the timer
+            self.start_timer()
+
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load outline: {e}")
 
@@ -256,6 +262,25 @@ class KidsDrawingApp:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to show selected images: {e}")
+
+    def start_timer(self):
+        if not self.timer_running:
+            self.timer_running = True
+            self.time_left = self.timer_duration
+            self.update_timer()
+    
+    def update_timer(self):
+        if self.timer_running:
+            minutes, seconds = divmod(self.time_left, 60)
+            time_format = f"{minutes:02}:{seconds:02}"
+            self.timer_label.config(text=f"Timer: {time_format}")
+
+            if self.time_left > 0:
+                self.time_left -= 1
+                self.root.after(1000, self.update_timer)  # Update timer every second
+            else:
+                self.timer_running = False
+                messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
 
     def start_drawing(self, event):
         self.drawing = True
@@ -299,6 +324,14 @@ class KidsDrawingApp:
         self.canvas.delete("all")
         self.image = Image.new("RGB", (self.canvas_width, self.canvas_height), "white")
         self.draw = ImageDraw.Draw(self.image)
+
+    def save_drawing(self):
+        """ Save the current drawing to a file """
+        file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+        if file_path:
+            self.save_state()  # Save current state before saving the image
+            self.image.save(file_path)
+            messagebox.showinfo("Save Drawing", "Drawing saved successfully!")   
 
 if __name__ == "__main__":
     root = tk.Tk()
