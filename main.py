@@ -10,7 +10,7 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 900
+        self.canvas_width = 800
         self.canvas_height = 900
 
         # Coin system
@@ -93,6 +93,10 @@ class KidsDrawingApp:
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=1)
+        
+        # Blank Page Button
+        blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
+        blank_page_button.pack(side=tk.LEFT, padx=1)
 
         # Timer Label
         self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
@@ -143,11 +147,11 @@ class KidsDrawingApp:
         self.widget_dict={} #create a dictionary to store labels and lock labels
 
         levels = {
-            "Level 1": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
-            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
-            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
-            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
-            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
+            "Level 1 - Easy": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2 - Normal": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3 - Hard": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4 - Insane": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5 - Impossible": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
 
@@ -352,19 +356,30 @@ class KidsDrawingApp:
     def start_drawing(self, event):
         self.drawing = True
         self.save_state()  # Save state before drawing
+        self.previous_x, self.previous_y = event.x, event.y  # Initialize the first point
 
     def stop_drawing(self, event):
         self.drawing = False
+        self.previous_x, self.previous_y = None, None  # Reset previous points
 
     def draw_on_canvas(self, event):
         if self.drawing:
+            x, y = event.x, event.y
             x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
             x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
-            if self.eraser_mode:
-                # Draw an eraser
-                self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
-                self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
-            else:
+            if self.previous_x is not None and self.previous_y is not None:
+               # Draw a line between the previous and current points
+               self.canvas.create_line(self.previous_x, self.previous_y, x, y, fill=self.color, width=self.brush_size, capstyle=tk.ROUND)
+               self.draw.line([self.previous_x, self.previous_y, x, y], fill=self.color, width=self.brush_size)
+
+               # Update the previous point
+               self.previous_x, self.previous_y = x, y
+               
+               if self.eraser_mode:
+                 # Draw an eraser
+                 self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
+                 self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
+               else:
                 # Draw a brush stroke
                 self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
                 self.draw.ellipse([x1, y1, x2, y2], fill=self.color, outline=self.color)
@@ -399,6 +414,11 @@ class KidsDrawingApp:
             self.save_state()  # Save current state before saving the image
             self.image.save(file_path)
             messagebox.showinfo("Save Drawing", "Drawing saved successfully!")   
+
+    def blank_page(self):
+        """ Create a new blank page """
+        self.save_state()  # Save current state before creating a blank page
+        self.clear_canvas()  # Clear the current canvas
 
 if __name__ == "__main__":
     root = tk.Tk()
