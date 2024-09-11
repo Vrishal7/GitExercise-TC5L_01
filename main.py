@@ -202,6 +202,7 @@ class KidsDrawingApp:
                      # create unlock button
                         unlock_button=tk.Button(level_frame,text="Unlock Page", command=lambda level=level, i=i:self.unlock_page(level,i))   
                         unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
+                        self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
 
                     elif level == "Level 1" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
@@ -236,7 +237,13 @@ class KidsDrawingApp:
 
         #get the label and lock label from dictionary
               label=self.widget_dict.get((level,i))
-              lock_label=self.widget_dict.get((level,i,'lock'))    
+              lock_label=self.widget_dict.get((level,i,'lock'))   
+               
+              
+              #disable the button after successfuly purchase
+              unlock_button=self.widget_dict.get((level,i,'unlock'))
+              if unlock_button:
+                  unlock_button.config(state="disabled")
 
               if lock_label :
               #debug issues
