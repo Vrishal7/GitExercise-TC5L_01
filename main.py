@@ -183,7 +183,7 @@ class KidsDrawingApp:
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
 
                     #add lock icon to the locked outline pages
-                    if level != "Level" and i % 2 != 0 :
+                    if level != "Level 1" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
                         lock_img=lock_img.resize((50,50),Image.LANCZOS)
                         lock_icon=ImageTk.PhotoImage(lock_img)
@@ -197,7 +197,11 @@ class KidsDrawingApp:
                      #disable the label and button when the page is locked
                         label.config(state="disabled")      
 
-                    if level == "Level 1" and i % 2 != 0:
+                     # create unlock button
+                        unlock_button=tk.Button(level_frame,text="Unlock Page", command=lambda level=level, i=i:self.unlock_page(level,i))   
+                        unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
+
+                    elif level == "Level 1" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
                         complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.complete_buttons[(level, i)] = complete_button
@@ -207,6 +211,27 @@ class KidsDrawingApp:
     
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
+
+    def unlock_page(self,level,i):
+        coins_needed={
+            "Level 2":10,
+            "Level 3":20,
+            "Level 4":30,
+            "Level 5":40
+        }       
+
+        coins_required=coins_needed.get(level,0) 
+
+        if self.coins >= coins_required:
+            response=messagebox.askyesno("Confirm Purchase",f"Are you sure you want to unlock Page {i} in {level} for {coins_required} coins ?")
+            if response:
+                self.coins -= coins_required
+                self.coins_label.config(text=f"Coins: {self.coins}")
+                
+                print(self.widget_dict)
+
+        #get the label and lock label from dictionary
+        #         
 
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
