@@ -98,10 +98,6 @@ class KidsDrawingApp:
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT, padx=1)
 
-        # Blank Page Button
-        blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
-        blank_page_button.pack(side=tk.LEFT, padx=1)
-
         # Timer Label
         self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
         self.timer_label.pack(side=tk.RIGHT, padx=1)
