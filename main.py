@@ -187,7 +187,7 @@ class KidsDrawingApp:
                     #add lock icon to the locked outline pages
                     if level != "Level 1" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
-                        lock_img=lock_img.resize((50,50),Image.LANCZOS)
+                        lock_img=lock_img.resize((90,90),Image.LANCZOS)
                         lock_icon=ImageTk.PhotoImage(lock_img)
                         lock_label=tk.Label(label,image=lock_icon)
                         lock_label.image=lock_icon
