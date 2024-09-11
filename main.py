@@ -53,6 +53,9 @@ class KidsDrawingApp:
         # Track completed pages
         self.completed_pages = {"Level 1": [False] * 6}
 
+        #initialize complete button
+        self.complete_buttons={}
+
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -137,6 +140,8 @@ class KidsDrawingApp:
         self.canvas.image = self.canvas_image  # Keep reference to avoid garbage collection
 
     def load_mini_pictures(self):
+        self.widget_dict={} #create a dictionary to store labels and lock labels
+
         levels = {
             "Level 1": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
             "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
@@ -145,13 +150,6 @@ class KidsDrawingApp:
             "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
-        # Lock the pages
-        self.unlocked_pages = {
-            "Level 2": [False] * 6,
-            "Level 3": [False] * 6,
-            "Level 4": [False] * 6,
-            "Level 5": [False] * 6,
-        }
 
         start_y = 0
         row_height = 90 + 5  # Height of images plus padding
@@ -180,13 +178,24 @@ class KidsDrawingApp:
                     label.image = img_tk  # Keep a reference to avoid garbage collection
                     label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
 
-                    # Check if level is unlocked
-                    if level != "Level 1" and not self.unlocked_pages[level][i]:
-                        label.config(state="disabled")  # Cannot click
-                    else:
-                        # Bind click event to load the outline on the canvas
-                        label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
+                     # Bind click event to load the outline on the canvas
+                    label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
+
+                    #add lock icon to the locked outline pages
+                    if level != "Level" and i % 2 != 0 :
+                        lock_img=Image.open("lock.png")
+                        lock_img=lock_img.resize((50,50),Image.LANCZOS)
+                        lock_icon=ImageTk.PhotoImage(lock_img)
+                        lock_label=tk.Label(label,image=lock_icon)
+                        lock_label.image=lock_icon
+                        lock_label.place(relx=0.5,rely=0.5, anchor=tk.CENTER)
+
+                     # store the lock label in the widget
+                        self.widget_dict[(level,i,'lock')]=lock_label
+
+                     #disable the label and button when the page is locked
+                        label.config(state="disabled")      
 
                     if level == "Level 1" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
