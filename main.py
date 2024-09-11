@@ -218,6 +218,7 @@ class KidsDrawingApp:
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
     def unlock_page(self,level,i):
+        #coins neede per page in a certain level
         coins_needed={
             "Level 2":10,
             "Level 3":20,
@@ -230,7 +231,7 @@ class KidsDrawingApp:
         if self.coins >= coins_required:
             response=messagebox.askyesno("Confirm Purchase",f"Are you sure you want to unlock Page {i} in {level} for {coins_required} coins ?")
             if response:
-              self.coins -= coins_required
+              self.coins -= coins_required #decuts coins after purchase
               self.coins_label.config(text=f"Coins: {self.coins}")
                 
               print(self.widget_dict)
