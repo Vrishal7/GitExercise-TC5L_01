@@ -182,6 +182,8 @@ class KidsDrawingApp:
                     label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
 
+                    self.widget_dict[(level,i)]=label
+
                     #add lock icon to the locked outline pages
                     if level != "Level 1" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
@@ -208,6 +210,8 @@ class KidsDrawingApp:
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
+
+                    print(self.widget_dict)
     
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
