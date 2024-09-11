@@ -93,7 +93,7 @@ class KidsDrawingApp:
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=1)
-
+        
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT, padx=1)
