@@ -10,7 +10,7 @@ class KidsDrawingApp:
         self.root.title("Kids Drawing App")
 
         # Canvas dimensions
-        self.canvas_width = 900
+        self.canvas_width = 800
         self.canvas_height = 900
 
         # Coin system
@@ -90,6 +90,10 @@ class KidsDrawingApp:
         # Redo Button
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=1)
+        
+        # Blank Page Button
+        blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
+        blank_page_button.pack(side=tk.LEFT, padx=1)
 
         # Timer Label
         self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
@@ -332,6 +336,11 @@ class KidsDrawingApp:
             self.save_state()  # Save current state before saving the image
             self.image.save(file_path)
             messagebox.showinfo("Save Drawing", "Drawing saved successfully!")   
+
+    def blank_page(self):
+        """ Create a new blank page """
+        self.save_state()  # Save current state before creating a blank page
+        self.clear_canvas()  # Clear the current canvas
 
 if __name__ == "__main__":
     root = tk.Tk()
