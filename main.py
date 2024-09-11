@@ -53,6 +53,9 @@ class KidsDrawingApp:
         # Track completed pages
         self.completed_pages = {"Level 1": [False] * 6}
 
+        #initialize complete button
+        self.complete_buttons={}
+
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -91,6 +94,10 @@ class KidsDrawingApp:
         redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
         redo_button.pack(side=tk.LEFT, padx=1)
         
+        # Blank Page Button
+        blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
+        blank_page_button.pack(side=tk.LEFT, padx=1)
+
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT, padx=1)
@@ -141,21 +148,16 @@ class KidsDrawingApp:
         self.canvas.image = self.canvas_image  # Keep reference to avoid garbage collection
 
     def load_mini_pictures(self):
+        self.widget_dict={} #create a dictionary to store labels and lock labels
+
         levels = {
-            "Level 1": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
-            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
-            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
-            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
-            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
+            "Level 1 - Easy": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2 - Normal": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3 - Hard": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4 - Insane": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5 - Impossible": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
-        # Lock the pages
-        self.unlocked_pages = {
-            "Level 2": [False] * 6,
-            "Level 3": [False] * 6,
-            "Level 4": [False] * 6,
-            "Level 5": [False] * 6,
-        }
 
         start_y = 0
         row_height = 90 + 5  # Height of images plus padding
@@ -184,31 +186,100 @@ class KidsDrawingApp:
                     label.image = img_tk  # Keep a reference to avoid garbage collection
                     label.grid(row=i // 6, column=i % 6, padx=5, pady=5)  # Use grid for layout
 
-                    # Check if level is unlocked
-                    if level != "Level 1" and not self.unlocked_pages[level][i]:
-                        label.config(state="disabled")  # Cannot click
-                    else:
-                        # Bind click event to load the outline on the canvas
-                        label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
+                     # Bind click event to load the outline on the canvas
+                    label.bind("<Button-1>", lambda event, image_path=pic_path: self.load_outline(image_path))
                     print(f"Loaded image successfully: {pic_path}")  # Debug: Successful load
 
-                    if level == "Level 1" and i % 2 != 0:
+                    self.widget_dict[(level,i)]=label
+
+                    #add lock icon to the locked outline pages
+                    if level != "Level 1" and i % 2 != 0 :
+                        lock_img=Image.open("lock.png")
+                        lock_img=lock_img.resize((50,50),Image.LANCZOS)
+                        lock_icon=ImageTk.PhotoImage(lock_img)
+                        lock_label=tk.Label(label,image=lock_icon)
+                        lock_label.image=lock_icon
+                        lock_label.place(relx=0.5,rely=0.5, anchor=tk.CENTER)
+
+                     # store the lock label in the widget
+                        self.widget_dict[(level,i,'lock')]=lock_label
+
+                     #disable the label and button when the page is locked
+                        label.config(state="disabled")      
+
+                     # create unlock button
+                        unlock_button=tk.Button(level_frame,text="Unlock Page", command=lambda level=level, i=i:self.unlock_page(level,i))   
+                        unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
+                        self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
+
+                    elif level == "Level 1" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
                         complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.complete_buttons[(level, i)] = complete_button
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
+
+                    print(self.widget_dict)
     
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
+    def unlock_page(self,level,i):
+        #coins neede per page in a certain level
+        coins_needed={
+            "Level 2":10,
+            "Level 3":20,
+            "Level 4":30,
+            "Level 5":40
+        }       
+
+        coins_required=coins_needed.get(level,0) 
+
+        if self.coins >= coins_required:
+            response=messagebox.askyesno("Confirm Purchase",f"Are you sure you want to unlock Page {i} in {level} for {coins_required} coins ?")
+            if response:
+              self.coins -= coins_required #decuts coins after purchase
+              self.coins_label.config(text=f"Coins: {self.coins}")
+                
+              print(self.widget_dict)
+
+        #get the label and lock label from dictionary
+              label=self.widget_dict.get((level,i))
+              lock_label=self.widget_dict.get((level,i,'lock'))   
+               
+              
+              #disable the button after successfuly purchase
+              unlock_button=self.widget_dict.get((level,i,'unlock'))
+              if unlock_button:
+                  unlock_button.config(state="disabled")
+
+              if lock_label :
+              #debug issues
+               print(f"Lock label found for ({level},{i})")
+               lock_label.destroy()
+               print(f"Lock label destroyed for ({level,{i}})")
+              else:
+               print(f"No lock label found for ({level},{i})")
+
+              if label:
+               label.config(state="normal")
+               message=f"Page {i} in {level} has been unlocked !\nCoins deducted:{coins_required}"
+               messagebox.showinfo("Success",message)
+              else:
+               messagebox.showerror("Error","Page label not found")
+            else:
+              messagebox.showinfo("Cancelled","Unlock cancelled")
+        else:
+            messagebox.showerror("Not enough coins",f"You need {coins_required} coins to unlock this page.")    
+                    
+
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
             self.completed_pages[level][i] = True
-            self.coins += 10  # Earn 10 coins for Level 1
+            self.coins += 50  # Earn 50 coins for Level 1
             self.coins_label.config(text=f"Coins: {self.coins}")
-            messagebox.showinfo("Congratulations!", "You have earned 10 coins")
+            messagebox.showinfo("Congratulations!", "You have earned 50 coins")
 
             # Disable button after clicking once
             complete_button = self.complete_buttons.get((level, i))
@@ -289,19 +360,30 @@ class KidsDrawingApp:
     def start_drawing(self, event):
         self.drawing = True
         self.save_state()  # Save state before drawing
+        self.previous_x, self.previous_y = event.x, event.y  # Initialize the first point
 
     def stop_drawing(self, event):
         self.drawing = False
+        self.previous_x, self.previous_y = None, None  # Reset previous points
 
     def draw_on_canvas(self, event):
         if self.drawing:
+            x, y = event.x, event.y
             x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
             x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
-            if self.eraser_mode:
-                # Draw an eraser
-                self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
-                self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
-            else:
+            if self.previous_x is not None and self.previous_y is not None:
+               # Draw a line between the previous and current points
+               self.canvas.create_line(self.previous_x, self.previous_y, x, y, fill=self.color, width=self.brush_size, capstyle=tk.ROUND)
+               self.draw.line([self.previous_x, self.previous_y, x, y], fill=self.color, width=self.brush_size)
+
+               # Update the previous point
+               self.previous_x, self.previous_y = x, y
+               
+               if self.eraser_mode:
+                 # Draw an eraser
+                 self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
+                 self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
+               else:
                 # Draw a brush stroke
                 self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
                 self.draw.ellipse([x1, y1, x2, y2], fill=self.color, outline=self.color)
