@@ -225,20 +225,41 @@ class KidsDrawingApp:
         if self.coins >= coins_required:
             response=messagebox.askyesno("Confirm Purchase",f"Are you sure you want to unlock Page {i} in {level} for {coins_required} coins ?")
             if response:
-                self.coins -= coins_required
-                self.coins_label.config(text=f"Coins: {self.coins}")
+              self.coins -= coins_required
+              self.coins_label.config(text=f"Coins: {self.coins}")
                 
-                print(self.widget_dict)
+              print(self.widget_dict)
 
         #get the label and lock label from dictionary
-        #         
+              label=self.widget_dict.get((level,i))
+              lock_label=self.widget_dict.get((level,i,'lock'))    
+
+              if lock_label :
+              #debug issues
+               print(f"Lock label found for ({level},{i})")
+               lock_label.destroy()
+               print(f"Lock label destroyed for ({level,{i}})")
+              else:
+               print(f"No lock label found for ({level},{i})")
+
+              if label:
+               label.config(state="normal")
+               message=f"Page {i} in {level} has been unlocked !\nCoins deducted:{coins_required}"
+               messagebox.showinfo("Success",message)
+              else:
+               messagebox.showerror("Error","Page label not found")
+            else:
+              messagebox.showinfo("Cancelled","Unlock cancelled")
+        else:
+            messagebox.showerror("Not enough coins",f"You need {coins_required} coins to unlock this page.")    
+                    
 
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
             self.completed_pages[level][i] = True
-            self.coins += 10  # Earn 10 coins for Level 1
+            self.coins += 50  # Earn 50 coins for Level 1
             self.coins_label.config(text=f"Coins: {self.coins}")
-            messagebox.showinfo("Congratulations!", "You have earned 10 coins")
+            messagebox.showinfo("Congratulations!", "You have earned 50 coins")
 
             # Disable button after clicking once
             complete_button = self.complete_buttons.get((level, i))
