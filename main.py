@@ -147,11 +147,11 @@ class KidsDrawingApp:
         self.widget_dict={} #create a dictionary to store labels and lock labels
 
         levels = {
-            "Level 1 - Easy": [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
-            "Level 2 - Normal": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
-            "Level 3 - Hard": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
-            "Level 4 - Insane": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
-            "Level 5 - Impossible": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
+            "Level 1" : [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
 
@@ -208,7 +208,7 @@ class KidsDrawingApp:
                         unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
 
-                    elif level == "Level 1" and i % 2 != 0:
+                    if level == "Level 1" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
                         complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.complete_buttons[(level, i)] = complete_button
