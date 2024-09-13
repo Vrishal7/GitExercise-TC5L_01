@@ -27,9 +27,13 @@ class KidsDrawingApp:
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
         self.canvas.pack(side=tk.LEFT)
 
+        # Variables to store previous position
+        self.last_x, self.last_y = None, None
+
         # Draw Variables
         self.color = 'black'
         self.brush_size = 5
+        self.eraser_size = 10  # Default eraser size
         self.drawing = False
         self.eraser_mode = False  # Initialize eraser mode
         self.previous_x = None
@@ -460,10 +464,14 @@ class KidsDrawingApp:
                 messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
 
     def start_drawing(self, event):
-        if self.mode == 'brush':
+        if self.mode == 'brush' and not self.eraser_mode:
             self.drawing = True
-            self.save_state()  # Save state before drawing
-            self.previous_x, self.previous_y = event.x, event.y  # Initialize the first point
+            self.previous_x, self.previous_y = event.x, event.y
+            self.save_state()  # Save state before drawing starts
+        elif self.mode == 'brush' and self.eraser_mode:
+            self.drawing = True
+            self.previous_x, self.previous_y = event.x, event.y
+            self.save_state()  # Save state before erasing starts
 
     def stop_drawing(self, event):
         if self.mode == 'brush':
@@ -471,27 +479,39 @@ class KidsDrawingApp:
         self.previous_x, self.previous_y = None, None  # Reset previous points
 
     def draw_on_canvas(self, event):
-        if self.drawing:
-            x, y = event.x, event.y
-            x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
-            x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
-            if self.previous_x is not None and self.previous_y is not None:
-               # Draw a line between the previous and current points
-               self.canvas.create_line(self.previous_x, self.previous_y, x, y, fill=self.color, width=self.brush_size, capstyle=tk.ROUND)
-               self.draw.line([self.previous_x, self.previous_y, x, y], fill=self.color, width=self.brush_size)
+        """ Draw on the canvas, handling both brush and eraser modes """
+        x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
+        x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
 
-               # Update the previous point
-               self.previous_x, self.previous_y = x, y
-               
-               if self.eraser_mode:
-                 # Draw an eraser
-                 self.canvas.create_oval(x1, y1, x2, y2, fill='white', outline='white')
-                 self.draw.ellipse([x1, y1, x2, y2], fill='white', outline='white')
-               else:
-                # Draw a brush stroke
-                self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
-                self.draw.ellipse([x1, y1, x2, y2], fill=self.color, outline=self.color)
+        # Check if the mode is eraser
+        if self.eraser_mode:
+            size = self.eraser_size  # Use eraser size when eraser is active
+            color = "white"  # Eraser color (background color)
+        else:
+            size = self.brush_size  # Use brush size otherwise
+            color = self.color
 
+        x1, y1 = (event.x - size), (event.y - size)
+        x2, y2 = (event.x + size), (event.y + size)
+
+    # Draw on canvas
+        self.canvas.create_oval(x1, y1, x2, y2, fill=color, outline=color)
+
+    # Also draw on the image for saving purposes
+        self.draw.ellipse([x1, y1, x2, y2], fill=color)
+
+    # Eraser size slider
+        self.eraser_size_slider = tk.Scale(self, from_=1, to=50, orient="horizontal", label="Eraser Size")
+        self.eraser_size_slider.set(self.eraser_size)  # Set default value
+        self.eraser_size_slider.pack()
+
+    # Update eraser size when slider is changed
+    def update_eraser_size(self, value):
+        self.eraser_size = int(value)
+
+    # Bind the slider change event to the update function
+        self.eraser_size_slider.config(command=self.update_eraser_size)
+    
     def insert_text(self, event):
         # Function to insert text at mouse click position
         x, y = event.x, event.y
@@ -510,11 +530,12 @@ class KidsDrawingApp:
             self.eraser_button.config(relief=tk.RAISED)  # Reset eraser button appearance
 
     def toggle_eraser(self):
+        """ Toggle eraser mode on or off """
         self.eraser_mode = not self.eraser_mode
         if self.eraser_mode:
-            self.eraser_button.config(relief=tk.SUNKEN)
+            self.eraser_button.config(text="Brush Mode")
         else:
-            self.eraser_button.config(relief=tk.RAISED)
+            self.eraser_button.config(text="Eraser Mode")
 
     def clear_canvas(self):
         self.save_state()  # Save current state before clearing
