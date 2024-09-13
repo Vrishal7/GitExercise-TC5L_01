@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw, ImageTk, ImageFilter
 import io
 from io import BytesIO
 import os
+from tkinter import simpledialog
 
 class KidsDrawingApp:
     def __init__(self, root):
@@ -31,6 +32,9 @@ class KidsDrawingApp:
         self.brush_size = 5
         self.drawing = False
         self.eraser_mode = False  # Initialize eraser mode
+        self.previous_x = None
+        self.previous_y = None
+        self.mode = 'brush'  # Track mode: 'brush' or 'text' 
 
         # Create image and draw objects
         self.image = Image.new("RGB", (self.canvas_width, self.canvas_height), "white")
@@ -65,9 +69,13 @@ class KidsDrawingApp:
         self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
         self.coins_label.pack(side=tk.TOP, padx=1)
 
-        # Gallery Button
+        # Open Folder Button
         gallery_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
         gallery_button.pack(side=tk.LEFT, padx=1)
+
+        # Timer Label
+        self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
+        self.timer_label.pack(side=tk.TOP, padx=1)
 
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
@@ -94,14 +102,22 @@ class KidsDrawingApp:
         # Undo Button
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
         undo_button.pack(side=tk.LEFT, padx=1)
-        
+
+        # Brush Mode
+        self.brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)
+        self.brush_button.pack(side=tk.LEFT)
+
+        # Text Mode
+        self.text_button = tk.Button(root, text="Text Mode", command=self.activate_text_mode)
+        self.text_button.pack(side=tk.LEFT)
+
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT, padx=1)
-
-        # Timer Label
-        self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
-        self.timer_label.pack(side=tk.RIGHT, padx=1)
+        
+        # Background Button
+        bg_button = tk.Button(toolbar, text="Change Background", command=self.change_background)
+        bg_button.pack(side=tk.LEFT, padx=1)
 
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
@@ -128,6 +144,46 @@ class KidsDrawingApp:
          if file_path:
            self.load_outline(file_path)
 
+    def activate_brush_mode(self):
+        # Switch to brush mode
+        self.mode = 'brush'
+        # Unbind text insertion handlers
+        self.canvas.unbind("<Button-1>")
+        self.canvas.unbind("<Key>")
+        # Bind brush handlers
+        self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
+        self.canvas.bind("<ButtonPress-1>", self.start_drawing)
+        self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
+
+    def activate_text_mode(self):
+        # Switch to text mode
+        self.mode = 'text'
+        # Unbind brush handlers
+        self.canvas.unbind("<B1-Motion>")
+        self.canvas.unbind("<ButtonPress-1>")
+        self.canvas.unbind("<ButtonRelease-1>")
+        # Bind text insertion handlers
+        self.canvas.bind("<Button-1>", self.insert_text)
+
+    def insert_text(self):
+        # Prompt the user to input the text
+        text = tk.simpledialog.askstring("Insert Text", "Enter the text:")
+    
+        if text:
+           # Wait for the user to click on the canvas to position the text
+           self.canvas.bind("<Button-1>", lambda event: self.place_text(event, text))
+
+    def change_background(self):
+        color = colorchooser.askcolor()[1]
+        if color:
+         self.canvas.config(bg=color)
+
+    def open_gallery(self):
+        # Open a folder with saved drawings
+        file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
+        if file_path:
+         self.load_outline(file_path)
+
     def undo(self):
         if self.undo_stack:
             state = self.undo_stack.pop()
@@ -144,6 +200,10 @@ class KidsDrawingApp:
             self.draw = ImageDraw.Draw(self.image)
             self.update_canvas()
 
+    def bind_brush(self):
+        # Bind the mouse event to the brush drawing function
+        self.canvas.bind("<B1-Motion>", self.paint)
+
     def update_canvas(self):
         """ Update the canvas with the current image """
         self.canvas_image = ImageTk.PhotoImage(self.image)
@@ -154,11 +214,11 @@ class KidsDrawingApp:
         self.widget_dict={} #create a dictionary to store labels and lock labels
 
         levels = {
-            "Level 1" : [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
-            "Level 2": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
-            "Level 3": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
-            "Level 4": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
-            "Level 5": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
+            "Level 1 - Easy" : [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
+            "Level 2 - Normal": [f"level2/outline{i}_level2.jpg" for i in range(1, 7)],
+            "Level 3 - Hard": [f"level3/outline{i}_level3.jpg" for i in range(1, 7)],
+            "Level 4 - Insane": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
+            "Level 5 - Impossible": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
 
 
@@ -183,7 +243,7 @@ class KidsDrawingApp:
                         print(f"Image not found: {pic_path}")  # Debug: Image not found
                         continue  # Skip to the next image
 
-                    img = Image.open(pic_path).resize((90, 90), Image.LANCZOS)  # Resize to fit
+                    img = Image.open(pic_path).resize((80, 80), Image.LANCZOS)  # Resize to fit
                     img_tk = ImageTk.PhotoImage(img)
                     label = tk.Label(level_frame, image=img_tk)
                     label.image = img_tk  # Keep a reference to avoid garbage collection
@@ -198,7 +258,7 @@ class KidsDrawingApp:
                     #add lock icon to the locked outline pages
                     if level != "Level 1" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
-                        lock_img=lock_img.resize((90,90),Image.LANCZOS)
+                        lock_img=lock_img.resize((80,80),Image.LANCZOS)
                         lock_icon=ImageTk.PhotoImage(lock_img)
                         lock_label=tk.Label(label,image=lock_icon)
                         lock_label.image=lock_icon
@@ -307,7 +367,7 @@ class KidsDrawingApp:
 
             # Display the outline on the canvas
             self.canvas_image = ImageTk.PhotoImage(outline_image_resized)
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=self.canvas_image)
+            self.canvas.create_image(1, 1, anchor=tk.NW, image=self.canvas_image)
 
             # Show the original and outline images on the right side
             self.show_selected_images(image_path, original_image_resized, outline_image_resized)
@@ -322,6 +382,45 @@ class KidsDrawingApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to load outline: {e}")
 
+    def place_text(self, event, text):
+        x, y = event.x, event.y
+
+        # Choose a font size (this can be made adjustable)
+        font_size = 20
+        font = ("Arial", font_size)
+
+        # Draw the text on the canvas
+        self.canvas.create_text(x, y, text=text, font=font, fill=self.color)
+    
+        # Also draw the text on the image to ensure it's saved
+        self.draw.text((x, y), text, font=None, fill=self.color)
+
+        # Unbind the click event after placing the text (Text mode ends)
+        self.canvas.unbind("<Button-1>")
+
+        # Rebind the brush tool (Enable brush mode again)
+        self.bind_brush()
+
+    def paint(self, event):
+        x1, y1 = (event.x - 1), (event.y - 1)
+        x2, y2 = (event.x + 1), (event.y + 1)
+    
+        # Draw on the canvas
+        self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
+
+        # Also draw on the image for saving purposes
+        self.draw.line([x1, y1, x2, y2], fill=self.color, width=self.brush_size)
+
+    def resize_image(image_path, new_width, new_height):
+        # Open the image
+        image = Image.open(image_path)
+    
+        # Resize the image
+        resized_image = image.resize((new_width, new_height), Image.ANTIALIAS)
+    
+        # Return the resized image
+        return resized_image
+  
     def show_selected_images(self, image_path, original_image, outline_image):
         # Clear previous images
         for widget in self.selected_frame.winfo_children():
@@ -361,12 +460,14 @@ class KidsDrawingApp:
                 messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
 
     def start_drawing(self, event):
-        self.drawing = True
-        self.save_state()  # Save state before drawing
-        self.previous_x, self.previous_y = event.x, event.y  # Initialize the first point
+        if self.mode == 'brush':
+            self.drawing = True
+            self.save_state()  # Save state before drawing
+            self.previous_x, self.previous_y = event.x, event.y  # Initialize the first point
 
     def stop_drawing(self, event):
-        self.drawing = False
+        if self.mode == 'brush':
+            self.drawing = False
         self.previous_x, self.previous_y = None, None  # Reset previous points
 
     def draw_on_canvas(self, event):
@@ -390,6 +491,13 @@ class KidsDrawingApp:
                 # Draw a brush stroke
                 self.canvas.create_oval(x1, y1, x2, y2, fill=self.color, outline=self.color)
                 self.draw.ellipse([x1, y1, x2, y2], fill=self.color, outline=self.color)
+
+    def insert_text(self, event):
+        # Function to insert text at mouse click position
+        x, y = event.x, event.y
+        text = simpledialog.askstring("Input", "Enter the text:")
+        if text:
+            self.canvas.create_text(x, y, text=text, fill=self.color, font=("Arial", 16))
 
     def change_brush_size(self, event):
         self.brush_size = event.widget.get()
