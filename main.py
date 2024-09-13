@@ -56,7 +56,7 @@ class KidsDrawingApp:
         self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
 
         # Track completed pages
-        self.completed_pages = {"Level 1": [False] * 6}
+        self.completed_pages = {"Level 1 - Easy": [False] * 6}
 
         #initialize complete button
         self.complete_buttons={}
@@ -256,7 +256,7 @@ class KidsDrawingApp:
                     self.widget_dict[(level,i)]=label
 
                     #add lock icon to the locked outline pages
-                    if level != "Level 1" and i % 2 != 0 :
+                    if level != "Level 1 - Easy" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
                         lock_img=lock_img.resize((80,80),Image.LANCZOS)
                         lock_icon=ImageTk.PhotoImage(lock_img)
@@ -275,7 +275,7 @@ class KidsDrawingApp:
                         unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
 
-                    if level == "Level 1" and i % 2 != 0:
+                    if level == "Level 1 - Easy" and i % 2 != 0:
                         complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
                         complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.complete_buttons[(level, i)] = complete_button
@@ -291,10 +291,10 @@ class KidsDrawingApp:
     def unlock_page(self,level,i):
         #coins neede per page in a certain level
         coins_needed={
-            "Level 2":10,
-            "Level 3":20,
-            "Level 4":30,
-            "Level 5":40
+            "Level 2 - Normal":10,
+            "Level 3 - Hard":20,
+            "Level 4 - Insane":30,
+            "Level 5 - Impossible":40
         }       
 
         coins_required=coins_needed.get(level,0) 
