@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw, ImageTk, ImageFilter
 import io
+from io import BytesIO
 import os
 
 class KidsDrawingApp:
@@ -62,7 +63,11 @@ class KidsDrawingApp:
 
         # Display coins
         self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
-        self.coins_label.pack(side=tk.LEFT, padx=1)
+        self.coins_label.pack(side=tk.TOP, padx=1)
+
+        # Gallery Button
+        gallery_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
+        gallery_button.pack(side=tk.LEFT, padx=1)
 
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
@@ -89,10 +94,6 @@ class KidsDrawingApp:
         # Undo Button
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
         undo_button.pack(side=tk.LEFT, padx=1)
-
-        # Redo Button
-        redo_button = tk.Button(toolbar, text="Redo", command=self.redo)
-        redo_button.pack(side=tk.LEFT, padx=1)
         
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
@@ -121,6 +122,12 @@ class KidsDrawingApp:
         self.undo_stack.append(state.getvalue())
         self.redo_stack.clear()  # Clear redo stack on new action
 
+    def open_gallery(self):
+        # Open a folder with saved drawings
+         file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
+         if file_path:
+           self.load_outline(file_path)
+
     def undo(self):
         if self.undo_stack:
             state = self.undo_stack.pop()
@@ -132,7 +139,7 @@ class KidsDrawingApp:
     def redo(self):
         if self.redo_stack:
             state = self.redo_stack.pop()
-            self.save_state()  # Save current state to undo stack
+            self.undo_stack.append(self.image.tobytes)
             self.image = Image.open(io.BytesIO(state))
             self.draw = ImageDraw.Draw(self.image)
             self.update_canvas()
