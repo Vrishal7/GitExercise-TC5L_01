@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw, ImageTk, ImageFilter
 import io
+from io import BytesIO
 import os
 from tkinter import simpledialog
 
@@ -68,6 +69,10 @@ class KidsDrawingApp:
         self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
         self.coins_label.pack(side=tk.TOP, padx=1)
 
+        # Open Folder Button
+        gallery_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
+        gallery_button.pack(side=tk.LEFT, padx=1)
+
         # Timer Label
         self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
         self.timer_label.pack(side=tk.TOP, padx=1)
@@ -98,6 +103,7 @@ class KidsDrawingApp:
         undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
         undo_button.pack(side=tk.LEFT, padx=1)
 
+        # Brush Mode
         self.brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)
         self.brush_button.pack(side=tk.LEFT)
 
@@ -112,10 +118,6 @@ class KidsDrawingApp:
         # Background Button
         bg_button = tk.Button(toolbar, text="Change Background", command=self.change_background)
         bg_button.pack(side=tk.LEFT, padx=1)
-
-        # Open Folder Button
-        openfolder_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
-        openfolder_button.pack(side=tk.LEFT, padx=1)
 
         # Mini Picture Section
         right_frame = tk.Frame(self.root, bd=2, relief=tk.RAISED)
@@ -135,6 +137,12 @@ class KidsDrawingApp:
         self.image.save(state, format="PNG")
         self.undo_stack.append(state.getvalue())
         self.redo_stack.clear()  # Clear redo stack on new action
+
+    def open_gallery(self):
+        # Open a folder with saved drawings
+         file_path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
+         if file_path:
+           self.load_outline(file_path)
 
     def activate_brush_mode(self):
         # Switch to brush mode
@@ -176,7 +184,6 @@ class KidsDrawingApp:
         if file_path:
          self.load_outline(file_path)
 
-
     def undo(self):
         if self.undo_stack:
             state = self.undo_stack.pop()
@@ -188,7 +195,7 @@ class KidsDrawingApp:
     def redo(self):
         if self.redo_stack:
             state = self.redo_stack.pop()
-            self.save_state()  # Save current state to undo stack
+            self.undo_stack.append(self.image.tobytes)
             self.image = Image.open(io.BytesIO(state))
             self.draw = ImageDraw.Draw(self.image)
             self.update_canvas()
