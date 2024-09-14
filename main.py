@@ -11,6 +11,9 @@ class KidsDrawingApp:
         self.root = root
         self.root.title("Kids Drawing App")
 
+        # Bind the close event to warn the user about unsaved progress
+        self.root.protocol("WM_DELETE_WINDOW", self.save_warning)
+
         # Canvas dimensions
         self.canvas_width = 800
         self.canvas_height = 900
@@ -168,6 +171,24 @@ class KidsDrawingApp:
         self.canvas.unbind("<ButtonRelease-1>")
         # Bind text insertion handlers
         self.canvas.bind("<Button-1>", self.insert_text)
+
+    def save_progress(self):
+        # Ask the user where they want to save the file
+        file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+        if file_path:
+            try:
+                self.image.save(file_path, "PNG")
+                messagebox.showinfo("Progress Saved", f"Your progress has been saved as {file_path}.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save progress: {e}")
+        else:
+            messagebox.showinfo("Save Cancelled", "Your progress was not saved.")
+
+    def save_warning(self):
+        # Display a warning when the user attempts to close the app without saving
+        if messagebox.askyesno("Save Progress", "Do you want to save your progress before exiting?"):
+            self.save_progress()
+        self.root.destroy()  # Close the app after saving or if the user chooses not to save
 
     def insert_text(self):
         # Prompt the user to input the text
@@ -461,7 +482,9 @@ class KidsDrawingApp:
                 self.root.after(1000, self.update_timer)  # Update timer every second
             else:
                 self.timer_running = False
+                self.save_progress()
                 messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
+                self.root.destroy()
 
     def start_drawing(self, event):
         if self.mode == 'brush' and not self.eraser_mode:
