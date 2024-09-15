@@ -348,7 +348,7 @@ class KidsDrawingApp:
                   self.widget_dict.pop((level,i,'unlock'))
 
                   #create a complete button
-                  complete_button=tk.Button(level_frame, text="Complete Page",command=lambda level=level, i=i: self.complete_page(level,i))
+                  complete_button=tk.Button(level_frame, text="Complete",command=lambda level=level, i=i: self.complete_page(level,i))
                   complete_button.grid(row=i//6 + 1, column=i % 6, padx=5, pady=3)
                   self.complete_buttons[(level,i)]=complete_button
 
@@ -396,6 +396,8 @@ class KidsDrawingApp:
             complete_button = self.complete_buttons.get((level, i))
             if complete_button:
                 complete_button.config(state="disabled")
+                complete_button.grid_forget()
+                
         else:
             messagebox.showinfo("Ooops","Looks like you have already completed this page!")
 
