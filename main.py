@@ -296,7 +296,7 @@ class KidsDrawingApp:
                         label.config(state="disabled")      
 
                      # create unlock button
-                        unlock_button=tk.Button(level_frame,text="Unlock Page", command=lambda level=level, i=i:self.unlock_page(level,i))   
+                        unlock_button=tk.Button(level_frame,text="Unlock Page", command=lambda level=level, i=i, level_frame=level_frame:self.unlock_page(level,i,level_frame))   
                         unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
 
@@ -313,7 +313,7 @@ class KidsDrawingApp:
             # Update starting y position for the next level
             start_y += len(mini_pics) // 5 * row_height + row_height  # Move to the next row
 
-    def unlock_page(self,level,i):
+    def unlock_page(self,level,i,level_frame):
         #coins neede per page in a certain level
         coins_needed={
             "Level 2 - Normal":10,
@@ -340,9 +340,15 @@ class KidsDrawingApp:
               #disable the button after successfuly purchase
               unlock_button=self.widget_dict.get((level,i,'unlock'))
               if unlock_button:
-                  unlock_button.destroy()
+                  unlock_button.grid_forget()
                   self.widget_dict.pop((level,i,'unlock'))
 
+                  #create a complete button
+                  complete_button=tk.Button(level_frame, text="Complete",command=lambda level=level, i=i: self.complete_page(level,i))
+                  complete_button.grid(row=i//6 + 1, column=i % 6, padx=5, pady=3)
+                  self.complete_buttons[(level,i)]=complete_button
+
+                  
               if lock_label :
               #debug issues
                print(f"Lock label found for ({level},{i})")
@@ -361,7 +367,8 @@ class KidsDrawingApp:
               messagebox.showinfo("Cancelled","Unlock cancelled")
         else:
             messagebox.showerror("Not enough coins",f"You need {coins_required} coins to unlock this page.")    
-            
+
+
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
             self.completed_pages[level][i] = True
@@ -580,7 +587,6 @@ class KidsDrawingApp:
                 self.coins += coins_earned
                 self.coins_label.config(text=f"Coins:{self.coins}")
                 messagebox.showinfo("Congratulations !", f"You have earned {coins_earned} coins for saving your page in {level} !")
-                
 
     def blank_page(self):
         """ Create a new blank page """
