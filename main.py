@@ -63,7 +63,11 @@ class KidsDrawingApp:
         self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
 
         # Track completed pages
-        self.completed_pages = {"Level 1 - Easy": [False] * 6}
+        self.completed_pages = {"Level 1 - Easy": [False] * 6,
+                                "Level 2 - Normal":[False]*6,
+                                "Level 3 - Hard": [False]*6,
+                                "Level 4 - Insane": [False]*6,
+                                "Level 5 - Impossible":[False]*6}
 
         #initialize complete button
         self.complete_buttons={}
@@ -344,7 +348,7 @@ class KidsDrawingApp:
                   self.widget_dict.pop((level,i,'unlock'))
 
                   #create a complete button
-                  complete_button=tk.Button(level_frame, text="Complete",command=lambda level=level, i=i: self.complete_page(level,i))
+                  complete_button=tk.Button(level_frame, text="Complete Page",command=lambda level=level, i=i: self.complete_page(level,i))
                   complete_button.grid(row=i//6 + 1, column=i % 6, padx=5, pady=3)
                   self.complete_buttons[(level,i)]=complete_button
 
@@ -372,16 +376,28 @@ class KidsDrawingApp:
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
             self.completed_pages[level][i] = True
-            self.coins += 50  # Earn 50 coins for Level 1
+            
+            #coins earned
+            if level == "Level 2 - Normal":
+                coins_earned=60
+            elif level =="Level 3 - Hard":
+                coins_earned=70
+            elif level == "Level 4 - Insane":
+                coins_earned=80
+            elif level == "Level 5 - Impossible":
+                coins_earned=90    
+            else:
+                coins_earned=50            
+            self.coins += coins_earned # default coins earned value for level 1
             self.coins_label.config(text=f"Coins: {self.coins}")
-            messagebox.showinfo("Congratulations!", "You have earned 50 coins")
+            messagebox.showinfo("Congratulations!", f"You have earned {coins_earned} coins")
 
             # Disable button after clicking once
             complete_button = self.complete_buttons.get((level, i))
             if complete_button:
                 complete_button.config(state="disabled")
         else:
-            messagebox.showinfo("Looks like you have already completed this page!")
+            messagebox.showinfo("Ooops","Looks like you have already completed this page!")
 
     def load_outline(self, image_path):
         try:
