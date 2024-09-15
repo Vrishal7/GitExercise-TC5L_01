@@ -335,12 +335,13 @@ class KidsDrawingApp:
         #get the label and lock label from dictionary
               label=self.widget_dict.get((level,i))
               lock_label=self.widget_dict.get((level,i,'lock'))   
-               
               
+               
               #disable the button after successfuly purchase
               unlock_button=self.widget_dict.get((level,i,'unlock'))
               if unlock_button:
-                  unlock_button.config(state="disabled")
+                  unlock_button.destroy()
+                  self.widget_dict.pop((level,i,'unlock'))
 
               if lock_label :
               #debug issues
@@ -360,8 +361,7 @@ class KidsDrawingApp:
               messagebox.showinfo("Cancelled","Unlock cancelled")
         else:
             messagebox.showerror("Not enough coins",f"You need {coins_required} coins to unlock this page.")    
-                    
-
+            
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
             self.completed_pages[level][i] = True
@@ -573,6 +573,14 @@ class KidsDrawingApp:
             self.save_state()  # Save current state before saving the image
             self.image.save(file_path)
             messagebox.showinfo("Save Drawing", "Drawing saved successfully!")   
+
+            level=self.get_current_level()
+            if level:
+                coins_earned= self.get_current_level()
+                self.coins += coins_earned
+                self.coins_label.config(text=f"Coins:{self.coins}")
+                messagebox.showinfo("Congratulations !", f"You have earned {coins_earned} coins for saving your page in {level} !")
+                
 
     def blank_page(self):
         """ Create a new blank page """
