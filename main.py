@@ -241,6 +241,7 @@ class KidsDrawingApp:
 
     def load_mini_pictures(self):
         self.widget_dict={} #create a dictionary to store labels and lock labels
+        self.complete_buttons={} #dictionary for complete buttons
 
         levels = {
             "Level 1 - Easy" : [f"level1/outline{i}_level1.jpg" for i in range(1, 7)],
@@ -249,8 +250,7 @@ class KidsDrawingApp:
             "Level 4 - Insane": [f"level4/outline{i}_level4.jpg" for i in range(1, 7)],
             "Level 5 - Impossible": [f"level5/outline{i}_level5.jpg" for i in range(1, 7)],  # Add more levels as needed
         }
-
-
+        
         start_y = 0
         row_height = 90 + 5  # Height of images plus padding
 
@@ -284,6 +284,11 @@ class KidsDrawingApp:
 
                     self.widget_dict[(level,i)]=label
 
+                    if level =="Level 1 - Easy" and i % 2 !=0:
+                        complete_button=tk.Button(level_frame,text="Complete", command=lambda level=level, i=i:self.complete_page(level,i))
+                        complete_button.grid(row=i // 6+1, column= i % 6, padx=5, pady=3)
+                        self.complete_buttons[(level,i)]
+
                     #add lock icon to the locked outline pages
                     if level != "Level 1 - Easy" and i % 2 != 0 :
                         lock_img=Image.open("lock.png")
@@ -304,10 +309,6 @@ class KidsDrawingApp:
                         unlock_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
                         self.widget_dict[(level,i,'unlock')]= unlock_button #store the unlock button
 
-                    if level == "Level 1 - Easy" and i % 2 != 0:
-                        complete_button = tk.Button(level_frame, text="Complete Page", command=lambda level=level, i=i: self.complete_page(level, i))
-                        complete_button.grid(row=i // 6 + 1, column=i % 6, padx=5, pady=3)
-                        self.complete_buttons[(level, i)] = complete_button
 
                 except Exception as e:
                     print(f"Failed to load mini picture: {e}")  # Debug: Print error details
@@ -379,27 +380,29 @@ class KidsDrawingApp:
             
             #coins earned
             if level == "Level 2 - Normal":
-                coins_earned=60
+                coins_earned=30
             elif level =="Level 3 - Hard":
-                coins_earned=70
+                coins_earned=40
             elif level == "Level 4 - Insane":
-                coins_earned=80
+                coins_earned=50
             elif level == "Level 5 - Impossible":
-                coins_earned=90    
+                coins_earned=60    
             else:
-                coins_earned=50            
+                coins_earned=20            
             self.coins += coins_earned # default coins earned value for level 1
             self.coins_label.config(text=f"Coins: {self.coins}")
-            messagebox.showinfo("Congratulations!", f"You have earned {coins_earned} coins")
+            messagebox.showinfo("Congratulations!", f"You have earned {coins_earned} coins !")
 
             # Disable button after clicking once
             complete_button = self.complete_buttons.get((level, i))
             if complete_button:
                 complete_button.config(state="disabled")
                 complete_button.grid_forget()
+                self.complete_buttons.pop()
                 
         else:
             messagebox.showinfo("Ooops","Looks like you have already completed this page!")
+            
 
     def load_outline(self, image_path):
         try:
