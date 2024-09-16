@@ -272,7 +272,7 @@ class KidsDrawingApp:
                         print(f"Image not found: {pic_path}")  # Debug: Image not found
                         continue  # Skip to the next image
 
-                    img = Image.open(pic_path).resize((80, 80), Image.LANCZOS)  # Resize to fit
+                    img = Image.open(pic_path).resize((80, 75), Image.LANCZOS)  # Resize to fit
                     img_tk = ImageTk.PhotoImage(img)
                     label = tk.Label(level_frame, image=img_tk)
                     label.image = img_tk  # Keep a reference to avoid garbage collection
