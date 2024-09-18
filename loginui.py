@@ -3,13 +3,21 @@ from tkinter import messagebox
 from tkinter import PhotoImage
 import json
 import os
+import subprocess
 
 # Function to handle login
 def login():
     username = entry_username.get()
     password = entry_password.get()
-    
-    # Load credentials from JSON file
+
+    # Check if username is "Parents" and password is "Parent12345"
+    if username == "Parents" and password == "Parent12345":
+        root.destroy()  # Close the current window
+        # Open the parentui.py script
+        subprocess.run(["python", "parentui.py"])  # Runs the parentui.py file
+        return
+
+    # Load credentials from JSON file for other users
     file_path = "credentials.json"
     if os.path.exists(file_path):
         with open(file_path, "r") as file:
@@ -20,8 +28,9 @@ def login():
     # Check if the entered credentials match any saved users
     for user in users:
         if user["username"] == username and user["password"] == password:
-            login_frame.pack_forget()
-            drawing_frame.pack(fill="both", expand=True)
+            root.destroy()  # Close the current window
+            # Open the main.py script after successful login
+            subprocess.run(["python", "main.py"])  # Runs the main.py file
             return
 
     messagebox.showerror("Login Failed", "Invalid Username or Password")
@@ -29,12 +38,6 @@ def login():
 # Function to exit the app
 def exit_app():
     root.quit()
-
-# Function to draw on canvas
-def paint(event):
-    x1, y1 = (event.x - 1), (event.y - 1)
-    x2, y2 = (event.x + 1), (event.y + 1)
-    canvas.create_oval(x1, y1, x2, y2, fill="black", width=5)
 
 # Function to register a new parent
 def open_register():
@@ -44,13 +47,13 @@ def open_register():
 def register_user():
     username = entry_reg_username.get()
     password = entry_reg_password.get()
-    
+
     if not username or not password:
         messagebox.showerror("Registration Failed", "All fields are required!")
         return
-    
+
     new_user = {"username": username, "password": password}
-    
+
     # Save the credentials to a JSON file
     file_path = "credentials.json"
     if os.path.exists(file_path):
@@ -58,7 +61,7 @@ def register_user():
             users = json.load(file)
     else:
         users = []
-    
+
     # Check if the username already exists
     for user in users:
         if user["username"] == username:
@@ -85,7 +88,7 @@ login_frame.pack(pady=20)
 
 # Add Logo Image with Error Handling and Centering
 try:
-    logo_image = PhotoImage(file="C:/Users/User/Desktop/login UI/drawinglogo.png")  # Update the path to your image
+    logo_image = PhotoImage(file="C:/Users/User/Desktop/Minni it/GitExercise-TC5L_01/GitExercise-TC5L_01/login ui/drawinglogo.png")  # Update the path to your image
 except Exception as e:
     print("Error loading logo image:", e)
     logo_image = None  # Set to None if the image can't be loaded
@@ -128,15 +131,5 @@ entry_reg_password.pack(pady=5)
 tk.Button(register_frame, text="Register", command=register_user, font=font_settings).pack(pady=10)
 
 tk.Button(register_frame, text="Back to Login", command=lambda: [register_frame.pack_forget(), login_frame.pack(pady=20)], font=font_settings).pack(pady=5)
-
-# Drawing Frame
-drawing_frame = tk.Frame(root)
-
-canvas = tk.Canvas(drawing_frame, bg="white", width=500, height=400)
-canvas.pack(expand=True)
-
-canvas.bind("<B1-Motion>", paint)
-
-tk.Button(drawing_frame, text="Exit", command=exit_app, font=font_settings).pack(pady=10)
 
 root.mainloop()
