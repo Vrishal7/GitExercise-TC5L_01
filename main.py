@@ -44,6 +44,9 @@ class KidsDrawingApp:
         self.previous_y = None
         self.mode = 'brush'  # Track mode: 'brush' or 'text' 
 
+        self.text_items = {}  # Dictionary to hold text IDs
+        self.last_text_id = None  # Keep track of the last text ID for editing
+
         # Create image and draw objects
         self.image = Image.new("RGB", (self.canvas_width, self.canvas_height), "white")
         self.draw = ImageDraw.Draw(self.image)
@@ -61,7 +64,7 @@ class KidsDrawingApp:
         # Bind mouse events to canvas
         self.canvas.bind("<ButtonPress-1>", self.start_drawing)
         self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
-        self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
+        self.root.bind("<e>", self.edit_text)  # Bind the "E" key for editing text
 
         # Track completed pages
         self.completed_pages = {"Level 1 - Easy": [False] * 6,
@@ -149,6 +152,35 @@ class KidsDrawingApp:
         self.image.save(state, format="PNG")
         self.undo_stack.append(state.getvalue())
         self.redo_stack.clear()  # Clear redo stack on new action
+
+    def place_text(self, event, text):
+        x, y = event.x, event.y
+        font_size = 20
+        font = ("Arial", font_size)
+
+        # Draw the text on the canvas
+        self.last_text_id = self.canvas.create_text(x, y, text=text, font=font, fill=self.color)
+
+        # Also draw the text on the image to ensure it's saved
+        self.draw.text((x, y), text, font=None, fill=self.color)
+
+        # Unbind the click event after placing the text (Text mode ends)
+        self.canvas.unbind("<Button-1>")
+
+        # Rebind the brush tool (Enable brush mode again)
+        self.bind_brush()
+
+    def edit_text(self, event):
+        if self.last_text_id is not None:
+            current_text = self.canvas.itemcget(self.last_text_id, 'text')
+            new_text = simpledialog.askstring("Edit Text", "Enter new text:", initialvalue=current_text)
+
+            if new_text is not None:
+                # Update the text on the canvas
+                self.canvas.itemconfig(self.last_text_id, text=new_text)
+
+                # Also update the drawn image if needed
+                self.draw.text((self.canvas.coords(self.last_text_id)[0], self.canvas.coords(self.last_text_id)[1]), new_text, font=None, fill=self.color)
 
     def open_gallery(self):
         # Open a folder with saved drawings
