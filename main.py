@@ -16,8 +16,8 @@ class KidsDrawingApp:
         self.root.protocol("WM_DELETE_WINDOW", self.save_warning)
 
         # Canvas dimensions
-        self.canvas_width = 800
-        self.canvas_height = 900
+        self.canvas_width = 680
+        self.canvas_height = 800
 
         # Coin system
         self.coins = 0
@@ -102,6 +102,16 @@ class KidsDrawingApp:
         color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
         color_button.pack(side=tk.LEFT, padx=1)
 
+        # Shape Buttons
+        circle_button = tk.Button(toolbar, text="Circle", command=lambda: self.select_shape('circle'))
+        circle_button.pack(side=tk.LEFT, padx=1)
+
+        rectangle_button = tk.Button(toolbar, text="Rectangle", command=lambda: self.select_shape('rectangle'))
+        rectangle_button.pack(side=tk.LEFT, padx=1)
+
+        line_button = tk.Button(toolbar, text="Line", command=lambda: self.select_shape('line'))
+        line_button.pack(side=tk.LEFT, padx=1)
+
         # Eraser Button
         self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
         self.eraser_button.pack(side=tk.LEFT, padx=1)
@@ -119,8 +129,8 @@ class KidsDrawingApp:
         undo_button.pack(side=tk.LEFT, padx=1)
 
         # Brush Mode
-        self.brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)
-        self.brush_button.pack(side=tk.LEFT)
+        brush_button = tk.Button(toolbar, text="Brush", command=lambda: self.set_shape_mode(None))
+        brush_button.pack(side=tk.LEFT)
 
         # Text Mode
         self.text_button = tk.Button(root, text="Text Mode", command=self.activate_text_mode)
@@ -128,7 +138,7 @@ class KidsDrawingApp:
 
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
-        blank_page_button.pack(side=tk.LEFT, padx=1)
+        blank_page_button.pack(side=tk.LEFT)
         
         # Background Button
         bg_button = tk.Button(toolbar, text="Change Background", command=self.change_background)
@@ -152,6 +162,11 @@ class KidsDrawingApp:
         self.image.save(state, format="PNG")
         self.undo_stack.append(state.getvalue())
         self.redo_stack.clear()  # Clear redo stack on new action
+
+    def select_shape(self, shape):
+        """ Select the shape tool to draw """
+        self.shape_mode = shape  # Set the shape mode
+        self.drawing = False  # Disable drawing mode when selecting shape
 
     def place_text(self, event, text):
         x, y = event.x, event.y
@@ -604,47 +619,67 @@ class KidsDrawingApp:
                 messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
                 self.root.destroy()
 
+    def set_shape_mode(self, shape):
+       """ Set the current shape mode for drawing """
+       self.shape_mode = shape
+       self.eraser_mode = False  # Disable eraser mode when in shape mode
+       self.eraser_button.config(relief=tk.RAISED)  # Reset eraser button appearance
+
     def start_drawing(self, event):
-        if self.mode == 'brush' and not self.eraser_mode:
-            self.drawing = True
-            self.previous_x, self.previous_y = event.x, event.y
-            self.save_state()  # Save state before drawing starts
-        elif self.mode == 'brush' and self.eraser_mode:
-            self.drawing = True
-            self.previous_x, self.previous_y = event.x, event.y
-            self.save_state()  # Save state before erasing starts
+       self.drawing = True
+       self.start_x = event.x
+       self.start_y = event.y
+       self.save_state()  # Save state before drawing
 
     def stop_drawing(self, event):
-        if self.mode == 'brush':
-            self.drawing = False
-        self.previous_x, self.previous_y = None, None  # Reset previous points
+       if self.shape_mode:  # Check if a shape is being drawn
+        end_x = event.x
+        end_y = event.y
+        self.draw_shape(self.shape_mode, self.start_x, self.start_y, end_x, end_y)
+        self.drawing = False
+        self.canvas.delete("temp")  # Clear temporary shape
 
     def draw_on_canvas(self, event):
-        """ Draw on the canvas, handling both brush and eraser modes """
-        x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
-        x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
-
-        # Check if the mode is eraser
-        if self.eraser_mode:
-            size = self.eraser_size  # Use eraser size when eraser is active
-            color = "white"  # Eraser color (background color)
-        else:
-            size = self.brush_size  # Use brush size otherwise
-            color = self.color
-
+       """ Draw on the canvas, handling both brush, eraser, and shape modes """
+       if self.shape_mode:
+        # Drawing shapes based on the selected shape mode
+        if self.shape_mode == 'circle':
+            self.canvas.delete("temp")  # Clear previous temporary circle
+            self.canvas.create_oval(self.start_x, self.start_y, event.x, event.y, outline=self.color, width=self.brush_size, tags="temp")
+        elif self.shape_mode == 'rectangle':
+            self.canvas.delete("temp")  # Clear previous temporary rectangle
+            self.canvas.create_rectangle(self.start_x, self.start_y, event.x, event.y, outline=self.color, width=self.brush_size, tags="temp")
+        elif self.shape_mode == 'line':
+            self.canvas.delete("temp")  # Clear previous temporary line
+            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill=self.color, width=self.brush_size, tags="temp")
+       else:
+        # Brush and eraser functionality
+        size = self.eraser_size if self.eraser_mode else self.brush_size
+        color = "white" if self.eraser_mode else self.color
+        
+        # Calculate the coordinates for the brush or eraser
         x1, y1 = (event.x - size), (event.y - size)
         x2, y2 = (event.x + size), (event.y + size)
 
-    # Draw on canvas
+        # Draw on canvas for brush or eraser
         self.canvas.create_oval(x1, y1, x2, y2, fill=color, outline=color)
 
-    # Also draw on the image for saving purposes
+        # Also draw on the image for saving purposes
         self.draw.ellipse([x1, y1, x2, y2], fill=color)
 
-    # Eraser size slider
-        self.eraser_size_slider = tk.Scale(self, from_=1, to=50, orient="horizontal", label="Eraser Size")
-        self.eraser_size_slider.set(self.eraser_size)  # Set default value
-        self.eraser_size_slider.pack()
+
+    def draw_shape(self, shape, start_x, start_y, end_x, end_y):
+        """ Draws the selected shape on the canvas """
+        if shape == 'circle':
+            self.canvas.create_oval(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+            self.draw.ellipse([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+        elif shape == 'rectangle':
+            self.canvas.create_rectangle(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+            self.draw.rectangle([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+        elif shape == 'line':
+            self.canvas.create_line(start_x, start_y, end_x, end_y, fill=self.color, width=self.brush_size)
+            self.draw.line([start_x, start_y, end_x, end_y], fill=self.color, width=self.brush_size)
+        self.update_canvas()
 
     # Update eraser size when slider is changed
     def update_eraser_size(self, value):
