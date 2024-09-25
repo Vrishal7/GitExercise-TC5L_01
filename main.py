@@ -5,6 +5,7 @@ import io
 import random
 from io import BytesIO
 import os
+import pygame
 from tkinter import simpledialog
 
 class KidsDrawingApp:
@@ -76,11 +77,14 @@ class KidsDrawingApp:
                                 "Level 2 - Normal":[False]*6,
                                 "Level 3 - Hard": [False]*6,
                                 "Level 4 - Insane": [False]*6,
-                                "Level 5 - Impossible":[False]*6}
-
-        #initialize complete button
+                                "Level 5 - Impossible":[False]*6} 
+        
+        #initialize complete buttons
         self.complete_buttons={}
-
+        
+        # initialize pygame mixer
+        pygame.mixer.init()
+        
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -171,6 +175,26 @@ class KidsDrawingApp:
         self.text_button = tk.Button(root, image=self.text_icon, command=self.activate_text_mode)  # Create the button with the icon
         self.text_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
+        # Music Button
+        music_img=Image.open("music.png").resize((20,20), Image.LANCZOS)
+        self.music_icon=ImageTk.PhotoImage(music_img)
+
+        music_button=tk.Button(toolbar,image=self.music_icon,command=self.play_music)
+        music_button.pack(side=tk.LEFT,padx=1)
+
+        # Theme Button
+        theme_img= Image.open("mode.png").resize((20,20), Image.LANCZOS)
+        self.theme_icon=ImageTk.PhotoImage(theme_img)
+
+        theme_button=tk.Menubutton(toolbar,image=self.theme_icon)
+        theme_button.pack(side=tk.LEFT,padx=1)
+
+        theme_menu=tk.Menu(theme_button,tearoff=0)
+        theme_menu.add_command(label="Light Mode",command=self.light_mode)
+        theme_menu.add_command(label="Dark Mode",command=self.dark_mode)
+
+        theme_button.config(menu=theme_menu)
+
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT)
@@ -203,6 +227,89 @@ class KidsDrawingApp:
         self.shape_mode = shape  # Set the shape mode
         self.drawing = False  # Disable drawing mode when selecting shape
 
+    def play_music(self):
+        self.music_window=tk.Toplevel(self.root)   
+        self.music_window.title("Music Options")
+
+        music_options=["music 1.mp3","music 2.mp3","music 3.mp3", "music 4.mp3"]
+        self.music_var=tk.StringVar(self.music_window)
+        self.music_var.set(music_options[0])
+
+        music_menu=tk.OptionMenu(self.music_window,self.music_var,*music_options)
+        music_menu.pack()
+
+        play_button=tk.Button(self.music_window,text="Play",command=self.start_music)
+        play_button.pack()
+
+        pause_button=tk.Button(self.music_window,text="Pause",command=self.pause_music)
+        pause_button.pack() 
+
+        resume_button=tk.Button(self.music_window,text="Resume",command=self.resume_music)
+        resume_button.pack()
+
+        stop_button=tk.Button(self.music_window,text="Stop",command=self.stop_music)
+        stop_button.pack()
+
+    def start_music(self):
+        music_file = self.music_var.get()
+        pygame.mixer.music.load(music_file)
+        pygame.mixer.music.play(-1)  # -1 to loop the music
+
+    def pause_music(self):
+        pygame.mixer.music.pause()
+
+    def resume_music(self):
+        pygame.mixer.music.unpause()
+
+    def stop_music(self):
+        pygame.mixer.music.stop()
+        self.music_window.destroy()
+
+    def light_mode(self):
+        self.root.config(bg="#f0f0f0")
+        for widget in self.root.winfo_children():
+            if isinstance(widget,tk.Frame):
+                widget.config(bg="#f0f0f0")
+            elif isinstance(widget,tk.Label):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Button):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Menubutton):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Scale):
+                widget.config(bg="#f0f0f0",fg="black",throughcolor="#f0f0f0")   
+
+        self.coins_label.config(bg="#f0f0f0",fg="black") 
+        self.timer_label.config (bg="#f0f0f0",fg="black")
+
+        #update the colours in mini it frames
+        self.mini_pics_frame.config(bg="#f0f0f0")
+        for widget in self.mini_pics_frame.winfo_children():
+            widget.config(bg="#f0f0f0")
+            for child in widget.winfo_children():
+                child.config(bg="#f0f0f0")
+                for grandchild in child.winfo_children():
+                    grandchild.config(bg="#f0f0f0")       
+
+       #update colours of selected frames
+        self.selected_frame.config(bg="#white")
+        for widget in self.selected_frame.winfo_children():
+            widget.config(bg="f0f0f0")
+
+            #canvas colour
+        self.canvas.config(bg="white")    
+        
+    def dark_mode(self):
+        self.root.config(bg="black")
+        for widget in self.root.winfo_children():
+            if isinstance(widget,tk.Frame):
+                widget.config(bg="black")
+            elif isinstance(widget,tk.Label):
+                widget.config(bg="black",fg="white")
+        self.coins_label.config(bg="black",fg="white")
+        self.timer_label.config(bg="black",fg="white")            
+                
+      
     def place_text(self, event, text):
         x, y = event.x, event.y
         font_size = 20
@@ -502,9 +609,9 @@ class KidsDrawingApp:
             ("What has hands and a face,but can't hold anything or smile ?","clock"),
             ("I have a tail and a head,but no body.What am I ?","coin"),
             ("What has keys but can't open locks?","piano"),
-            ("What gets wet as it dries ?","towel"),
+            ("Write the word 'rainbow' ?","rainbow"),
             ("What comes down but never goes up ?","rain"),
-            ("I go up and down but never move,what am I ? ", "staircase")
+            ("Spell the word 'bee' ? ", "bee")
         ]           
         question,answer=random.choice(questions) 
         self.challenge_question=question
