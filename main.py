@@ -609,9 +609,9 @@ class KidsDrawingApp:
             ("What has hands and a face,but can't hold anything or smile ?","clock"),
             ("I have a tail and a head,but no body.What am I ?","coin"),
             ("What has keys but can't open locks?","piano"),
-            ("What gets wet as it dries ?","towel"),
+            ("Write the word 'rainbow' ?","rainbow"),
             ("What comes down but never goes up ?","rain"),
-            ("I go up and down but never move,what am I ? ", "staircase")
+            ("Spell the word 'bee' ? ", "bee")
         ]           
         question,answer=random.choice(questions) 
         self.challenge_question=question
