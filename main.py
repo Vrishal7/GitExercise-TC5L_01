@@ -26,6 +26,7 @@ class KidsDrawingApp:
         self.timer_duration = 30 * 60  # 30 minutes in seconds
         self.time_left = self.timer_duration
         self.timer_running = False
+        self.timer = "30:00"
 
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
@@ -84,16 +85,24 @@ class KidsDrawingApp:
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
 
-        # Display coins
-        self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
+        # Load and resize the coin icon using PIL (make sure to use the correct file path)
+        coin_img = Image.open("coin_icon2.jpg").resize((30, 25), Image.Resampling.LANCZOS)
+        self.coin_icon = ImageTk.PhotoImage(coin_img)
+
+        # Create a label to display coins with the icon
+        self.coins_label = tk.Label(toolbar, image=self.coin_icon, text=f"Coins: {self.coins}", compound=tk.LEFT, font=("Arial", 14))
         self.coins_label.pack(side=tk.TOP, padx=1)
 
         # Open Folder Button
         gallery_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
         gallery_button.pack(side=tk.LEFT, padx=1)
 
-        # Timer Label
-        self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
+        # Load and resize the timer icon using PIL
+        timer_img = Image.open("timer_icon.png").resize((20, 20), Image.LANCZOS)
+        self.timer_icon = ImageTk.PhotoImage(timer_img)
+
+        # Create a timer label with the icon
+        self.timer_label = tk.Label(toolbar, image=self.timer_icon, text=f"Timer: {self.timer}", compound=tk.LEFT, font=("Arial", 14))
         self.timer_label.pack(side=tk.TOP, padx=1)
 
         # Brush Size Slider
@@ -103,8 +112,11 @@ class KidsDrawingApp:
         size_slider.bind("<Motion>", self.change_brush_size)
 
         # Color Button
-        color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
-        color_button.pack(side=tk.LEFT, padx=1)
+        color_img = Image.open("choosecolor_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the color icon
+        self.color_icon = ImageTk.PhotoImage(color_img)  # Create PhotoImage object
+
+        color_button = tk.Button(toolbar, image=self.color_icon, command=self.choose_color)  # Create the button with the icon
+        color_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
         # Shape Buttons
         circle_button = tk.Button(toolbar, text="Circle", command=lambda: self.select_shape('circle'))
@@ -116,36 +128,55 @@ class KidsDrawingApp:
         line_button = tk.Button(toolbar, text="Line", command=lambda: self.select_shape('line'))
         line_button.pack(side=tk.LEFT, padx=1)
 
-        # Eraser Button
-        self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
+        # Load and resize the eraser icon using PIL (with the correct resampling method)
+        eraser_img = Image.open("eraser_icon.png").resize((20, 20), Image.Resampling.LANCZOS)
+        self.eraser_icon = ImageTk.PhotoImage(eraser_img)
+
+        # Create the Eraser button with the icon
+        self.eraser_button = tk.Button(toolbar, image=self.eraser_icon, command=self.toggle_eraser)
         self.eraser_button.pack(side=tk.LEFT, padx=1)
 
         # Save Button
-        save_button = tk.Button(toolbar, text="Save Drawing", command=self.save_drawing)
-        save_button.pack(side=tk.LEFT, padx=1)
+        save_img = Image.open("save_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the save icon
+        self.save_icon = ImageTk.PhotoImage(save_img)  # Create PhotoImage object
+
+        save_button = tk.Button(toolbar, image=self.save_icon, command=self.save_drawing)  # Create the button with the icon
+        save_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
         # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
         clear_button.pack(side=tk.LEFT, padx=1)
 
         # Undo Button
-        undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
-        undo_button.pack(side=tk.LEFT, padx=1)
+        undo_img = Image.open("undo_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the undo icon
+        self.undo_icon = ImageTk.PhotoImage(undo_img)  # Create PhotoImage object
 
-        # Brush Mode
-        brush_button = tk.Button(toolbar, text="Brush", command=lambda: self.set_shape_mode(None))
-        brush_button.pack(side=tk.LEFT)
+        undo_button = tk.Button(toolbar, image=self.undo_icon, command=self.undo)  # Create the button with the icon
+        undo_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
-        # Text Mode
-        self.text_button = tk.Button(root, text="Text Mode", command=self.activate_text_mode)
-        self.text_button.pack(side=tk.LEFT)
+        # Brush Button
+        brush_img = Image.open("brush_icon2.png").resize((20, 20), Image.LANCZOS)  # Load and resize the brush icon
+        self.brush_icon = ImageTk.PhotoImage(brush_img)  # Create PhotoImage object
+
+        brush_button = tk.Button(toolbar, image=self.brush_icon, command=lambda: self.set_shape_mode(None))  # Create the button with the icon
+        brush_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
+
+        brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)  # Create the button with the icon
+        brush_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
+
+        # Text Mode Button
+        text_img = Image.open("text_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the text icon
+        self.text_icon = ImageTk.PhotoImage(text_img)  # Create PhotoImage object
+
+        self.text_button = tk.Button(root, image=self.text_icon, command=self.activate_text_mode)  # Create the button with the icon
+        self.text_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT)
         
         # Background Button
-        bg_button = tk.Button(toolbar, text="Change Background", command=self.change_background)
+        bg_button = tk.Button(root, text="Change Background", command=self.change_background)
         bg_button.pack(side=tk.LEFT, padx=1)
 
         # Mini Picture Section
