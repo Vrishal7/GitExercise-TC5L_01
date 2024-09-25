@@ -79,6 +79,9 @@ class KidsDrawingApp:
                                 "Level 4 - Insane": [False]*6,
                                 "Level 5 - Impossible":[False]*6} 
         
+        #initialize complete buttons
+        self.complete_buttons={}
+        
         # initialize pygame mixer
         pygame.mixer.init()
         
