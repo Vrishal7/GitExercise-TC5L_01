@@ -61,10 +61,14 @@ class KidsDrawingApp:
         # Buttons and Options
         self.create_widgets()
 
-        # Bind mouse events to canvas
-        self.canvas.bind("<ButtonPress-1>", self.start_drawing)
-        self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
+        # Bind mouse events to the canvas
+        self.canvas.bind("<ButtonPress-1>", self.start_drawing)    # Start drawing when mouse button is pressed
+        self.canvas.bind("<B1-Motion>", self.draw_on_canvas)       # Draw while the mouse is moving (drag)
+        self.canvas.bind("<ButtonRelease-1>", self.finalize_shape) # Finalize shape when the mouse button is released
+
+        # Bind keyboard event to the root window
         self.root.bind("<e>", self.edit_text)  # Bind the "E" key for editing text
+
 
         # Track completed pages
         self.completed_pages = {"Level 1 - Easy": [False] * 6,
@@ -642,21 +646,24 @@ class KidsDrawingApp:
     def draw_on_canvas(self, event):
        """ Draw on the canvas, handling both brush, eraser, and shape modes """
        if self.shape_mode:
-        # Drawing shapes based on the selected shape mode
+        # Remove only the shape that is currently being drawn (for smooth drawing effect)
+        self.canvas.delete("current_temp")  # Clear the currently drawn temporary shape
+
+        # Draw shapes based on the selected shape mode
         if self.shape_mode == 'circle':
-            self.canvas.delete("temp")  # Clear previous temporary circle
-            self.canvas.create_oval(self.start_x, self.start_y, event.x, event.y, outline=self.color, width=self.brush_size, tags="temp")
+            self.canvas.create_oval(self.start_x, self.start_y, event.x, event.y, 
+                                    outline=self.color, width=self.brush_size, tags="current_temp")
         elif self.shape_mode == 'rectangle':
-            self.canvas.delete("temp")  # Clear previous temporary rectangle
-            self.canvas.create_rectangle(self.start_x, self.start_y, event.x, event.y, outline=self.color, width=self.brush_size, tags="temp")
+            self.canvas.create_rectangle(self.start_x, self.start_y, event.x, event.y, 
+                                         outline=self.color, width=self.brush_size, tags="current_temp")
         elif self.shape_mode == 'line':
-            self.canvas.delete("temp")  # Clear previous temporary line
-            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill=self.color, width=self.brush_size, tags="temp")
+            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, 
+                                    fill=self.color, width=self.brush_size, tags="current_temp")
        else:
         # Brush and eraser functionality
         size = self.eraser_size if self.eraser_mode else self.brush_size
         color = "white" if self.eraser_mode else self.color
-        
+
         # Calculate the coordinates for the brush or eraser
         x1, y1 = (event.x - size), (event.y - size)
         x2, y2 = (event.x + size), (event.y + size)
@@ -667,19 +674,38 @@ class KidsDrawingApp:
         # Also draw on the image for saving purposes
         self.draw.ellipse([x1, y1, x2, y2], fill=color)
 
+    def finalize_shape(self, event):
+       """ Make the drawn shape permanent when the mouse is released """
+       if self.shape_mode:
+        # Draw the shape permanently on canvas and image
+        self.draw_shape(self.shape_mode, self.start_x, self.start_y, event.x, event.y)
+
+        # Clear the temporary shape
+        self.canvas.delete("current_temp")
 
     def draw_shape(self, shape, start_x, start_y, end_x, end_y):
-        """ Draws the selected shape on the canvas """
-        if shape == 'circle':
-            self.canvas.create_oval(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
-            self.draw.ellipse([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
-        elif shape == 'rectangle':
-            self.canvas.create_rectangle(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
-            self.draw.rectangle([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
-        elif shape == 'line':
-            self.canvas.create_line(start_x, start_y, end_x, end_y, fill=self.color, width=self.brush_size)
-            self.draw.line([start_x, start_y, end_x, end_y], fill=self.color, width=self.brush_size)
-        self.update_canvas()
+       """ Draws the selected shape on both the canvas and the internal image """
+       if shape == 'circle':
+        # Draw the circle on the canvas
+        self.canvas.create_oval(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+        # Draw the circle on the image
+        self.draw.ellipse([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+    
+       elif shape == 'rectangle':
+        # Draw the rectangle on the canvas
+        self.canvas.create_rectangle(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+        # Draw the rectangle on the image
+        self.draw.rectangle([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+    
+       elif shape == 'line':
+        # Draw the line on the canvas
+        self.canvas.create_line(start_x, start_y, end_x, end_y, fill=self.color, width=self.brush_size)
+        # Draw the line on the image
+        self.draw.line([start_x, start_y, end_x, end_y], fill=self.color, width=self.brush_size)
+    
+       # After drawing the shape, update the canvas to reflect the new changes
+       self.update_canvas()
+
 
     # Update eraser size when slider is changed
     def update_eraser_size(self, value):
