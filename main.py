@@ -24,7 +24,7 @@ class KidsDrawingApp:
         self.coins = 0
 
         # Timer variables
-        self.timer_duration = 30 * 60  # 30 minutes in seconds
+        self.timer_duration = 30 * 60  # Default to 30 minutes (in seconds)
         self.time_left = self.timer_duration
         self.timer_running = False
         self.timer = "30:00"
@@ -198,6 +198,10 @@ class KidsDrawingApp:
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT)
+
+        # Button to set custom time
+        self.set_time_button = tk.Button(toolbar, text="Set Timer", command=self.set_custom_timer)
+        self.set_time_button.pack(side=tk.LEFT, padx=1)
         
         # Background Button
         bg_button = tk.Button(root, text="Change Background", command=self.change_background)
@@ -446,7 +450,7 @@ class KidsDrawingApp:
 
         for level, mini_pics in levels.items():
             # Create a label for the level
-            level_label = tk.Label(self.mini_pics_frame, text=level, font=("Arial", 12, "bold"))
+            level_label = tk.Label(self.mini_pics_frame, text=level, font=("Arial", 10, "bold"))
             level_label.pack(side=tk.TOP, anchor=tk.W, pady=5)
 
             # Create a frame for this level's images
@@ -740,26 +744,35 @@ class KidsDrawingApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to show selected images: {e}")
 
+    def set_custom_timer(self):
+       # Ask the user to input time (in minutes)
+       custom_time = simpledialog.askinteger("Set Timer", "Enter time duration in minutes:", minvalue=1, maxvalue=1440)
+       if custom_time:
+        self.timer_duration = custom_time * 60  # Convert to seconds
+        self.time_left = self.timer_duration
+        self.timer = f"{custom_time:02}:00"
+        self.timer_label.config(text=f"Timer: {self.timer}")
+
     def start_timer(self):
-        if not self.timer_running:
-            self.timer_running = True
-            self.time_left = self.timer_duration
-            self.update_timer()
+      if not self.timer_running:
+        self.timer_running = True
+        self.time_left = self.timer_duration
+        self.update_timer()
     
     def update_timer(self):
-        if self.timer_running:
-            minutes, seconds = divmod(self.time_left, 60)
-            time_format = f"{minutes:02}:{seconds:02}"
-            self.timer_label.config(text=f"Timer: {time_format}")
+      if self.timer_running:
+        minutes, seconds = divmod(self.time_left, 60)
+        time_format = f"{minutes:02}:{seconds:02}"
+        self.timer_label.config(text=f"Timer: {time_format}")
 
-            if self.time_left > 0:
-                self.time_left -= 1
-                self.root.after(1000, self.update_timer)  # Update timer every second
-            else:
-                self.timer_running = False
-                self.save_progress()
-                messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
-                self.root.destroy()
+        if self.time_left > 0:
+            self.time_left -= 1
+            self.root.after(1000, self.update_timer)  # Update timer every second
+        else:
+            self.timer_running = False
+            self.save_progress()
+            messagebox.showinfo("Time's Up", "The timer has ended!")
+            self.root.destroy()
 
     def set_shape_mode(self, shape):
        """ Set the current shape mode for drawing """
