@@ -187,7 +187,7 @@ class KidsDrawingApp:
         self.mini_pics_frame.pack(side=tk.TOP, fill=tk.X)
 
         self.selected_frame = tk.Frame(right_frame)
-        self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X) #Make outline images
 
         self.load_mini_pictures()
 
