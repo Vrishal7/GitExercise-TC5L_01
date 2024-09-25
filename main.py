@@ -175,19 +175,25 @@ class KidsDrawingApp:
         self.text_button = tk.Button(root, image=self.text_icon, command=self.activate_text_mode)  # Create the button with the icon
         self.text_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
-        # music button 
-        music_img=Image.open("music.png").resize((20,20),Image.LANCZOS)
-        self.music_icon=ImageTk.PhotoImage(music_img)
-
-        music_button=tk.Button(toolbar,image=self.music_icon,command=self.play_music)
-        music_button.pack(side=tk.LEFT,padx=1)
-
         # Music Button
         music_img=Image.open("music.png").resize((20,20), Image.LANCZOS)
         self.music_icon=ImageTk.PhotoImage(music_img)
 
         music_button=tk.Button(toolbar,image=self.music_icon,command=self.play_music)
         music_button.pack(side=tk.LEFT,padx=1)
+
+        # Theme Button
+        theme_img= Image.open("mode.png").resize((20,20), Image.LANCZOS)
+        self.theme_icon=ImageTk.PhotoImage(theme_img)
+
+        theme_button=tk.Menubutton(toolbar,image=self.theme_icon)
+        theme_button.pack(side=tk.LEFT,padx=1)
+
+        theme_menu=tk.Menu(theme_button,tearoff=0)
+        theme_menu.add_command(label="Light Mode",command=self.light_mode)
+        theme_menu.add_command(label="Dark Mode",command=self.dark_mode)
+
+        theme_button.config(menu=theme_menu)
 
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
@@ -259,6 +265,51 @@ class KidsDrawingApp:
         pygame.mixer.music.stop()
         self.music_window.destroy()
 
+    def light_mode(self):
+        self.root.config(bg="#f0f0f0")
+        for widget in self.root.winfo_children():
+            if isinstance(widget,tk.Frame):
+                widget.config(bg="#f0f0f0")
+            elif isinstance(widget,tk.Label):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Button):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Menubutton):
+                widget.config(bg="#f0f0f0",fg="black")
+            elif isinstance(widget,tk.Scale):
+                widget.config(bg="#f0f0f0",fg="black",throughcolor="#f0f0f0")   
+
+        self.coins_label.config(bg="#f0f0f0",fg="black") 
+        self.timer_label.config (bg="#f0f0f0",fg="black")
+
+        #update the colours in mini it frames
+        self.mini_pics_frame.config(bg="#f0f0f0")
+        for widget in self.mini_pics_frame.winfo_children():
+            widget.config(bg="#f0f0f0")
+            for child in widget.winfo_children():
+                child.config(bg="#f0f0f0")
+                for grandchild in child.winfo_children():
+                    grandchild.config(bg="#f0f0f0")       
+
+       #update colours of selected frames
+        self.selected_frame.config(bg="#white")
+        for widget in self.selected_frame.winfo_children():
+            widget.config(bg="f0f0f0")
+
+            #canvas colour
+        self.canvas.config(bg="white")    
+        
+    def dark_mode(self):
+        self.root.config(bg="black")
+        for widget in self.root.winfo_children():
+            if isinstance(widget,tk.Frame):
+                widget.config(bg="black")
+            elif isinstance(widget,tk.Label):
+                widget.config(bg="black",fg="white")
+        self.coins_label.config(bg="black",fg="white")
+        self.timer_label.config(bg="black",fg="white")            
+                
+      
     def place_text(self, event, text):
         x, y = event.x, event.y
         font_size = 20
