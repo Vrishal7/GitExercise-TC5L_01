@@ -5,6 +5,7 @@ import io
 import random
 from io import BytesIO
 import os
+import pygame
 from tkinter import simpledialog
 
 class KidsDrawingApp:
@@ -76,11 +77,11 @@ class KidsDrawingApp:
                                 "Level 2 - Normal":[False]*6,
                                 "Level 3 - Hard": [False]*6,
                                 "Level 4 - Insane": [False]*6,
-                                "Level 5 - Impossible":[False]*6}
-
-        #initialize complete button
-        self.complete_buttons={}
-
+                                "Level 5 - Impossible":[False]*6} 
+        
+        # initialize pygame mixer
+        pygame.mixer.init()
+        
     def create_widgets(self):
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
@@ -171,6 +172,20 @@ class KidsDrawingApp:
         self.text_button = tk.Button(root, image=self.text_icon, command=self.activate_text_mode)  # Create the button with the icon
         self.text_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
+        # music button 
+        music_img=Image.open("music.png").resize((20,20),Image.LANCZOS)
+        self.music_icon=ImageTk.PhotoImage(music_img)
+
+        music_button=tk.Button(toolbar,image=self.music_icon,command=self.play_music)
+        music_button.pack(side=tk.LEFT,padx=1)
+
+        # Music Button
+        music_img=Image.open("music.png").resize((20,20), Image.LANCZOS)
+        self.music_icon=ImageTk.PhotoImage(music_img)
+
+        music_button=tk.Button(toolbar,image=self.music_icon,command=self.play_music)
+        music_button.pack(side=tk.LEFT,padx=1)
+
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
         blank_page_button.pack(side=tk.LEFT)
@@ -202,6 +217,44 @@ class KidsDrawingApp:
         """ Select the shape tool to draw """
         self.shape_mode = shape  # Set the shape mode
         self.drawing = False  # Disable drawing mode when selecting shape
+
+    def play_music(self):
+        self.music_window=tk.Toplevel(self.root)   
+        self.music_window.title("Music Options")
+
+        music_options=["music 1.mp3","music 2.mp3","music 3.mp3", "music 4.mp3"]
+        self.music_var=tk.StringVar(self.music_window)
+        self.music_var.set(music_options[0])
+
+        music_menu=tk.OptionMenu(self.music_window,self.music_var,*music_options)
+        music_menu.pack()
+
+        play_button=tk.Button(self.music_window,text="Play",command=self.start_music)
+        play_button.pack()
+
+        pause_button=tk.Button(self.music_window,text="Pause",command=self.pause_music)
+        pause_button.pack() 
+
+        resume_button=tk.Button(self.music_window,text="Resume",command=self.resume_music)
+        resume_button.pack()
+
+        stop_button=tk.Button(self.music_window,text="Stop",command=self.stop_music)
+        stop_button.pack()
+
+    def start_music(self):
+        music_file = self.music_var.get()
+        pygame.mixer.music.load(music_file)
+        pygame.mixer.music.play(-1)  # -1 to loop the music
+
+    def pause_music(self):
+        pygame.mixer.music.pause()
+
+    def resume_music(self):
+        pygame.mixer.music.unpause()
+
+    def stop_music(self):
+        pygame.mixer.music.stop()
+        self.music_window.destroy()
 
     def place_text(self, event, text):
         x, y = event.x, event.y
