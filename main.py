@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageDraw, ImageTk, ImageFilter
 import io
+import random
 from io import BytesIO
 import os
 from tkinter import simpledialog
@@ -15,8 +16,8 @@ class KidsDrawingApp:
         self.root.protocol("WM_DELETE_WINDOW", self.save_warning)
 
         # Canvas dimensions
-        self.canvas_width = 800
-        self.canvas_height = 900
+        self.canvas_width = 680
+        self.canvas_height = 800
 
         # Coin system
         self.coins = 0
@@ -25,6 +26,7 @@ class KidsDrawingApp:
         self.timer_duration = 30 * 60  # 30 minutes in seconds
         self.time_left = self.timer_duration
         self.timer_running = False
+        self.timer = "30:00"
 
         # Create canvas
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height, bg='white')
@@ -43,6 +45,9 @@ class KidsDrawingApp:
         self.previous_y = None
         self.mode = 'brush'  # Track mode: 'brush' or 'text' 
 
+        self.text_items = {}  # Dictionary to hold text IDs
+        self.last_text_id = None  # Keep track of the last text ID for editing
+
         # Create image and draw objects
         self.image = Image.new("RGB", (self.canvas_width, self.canvas_height), "white")
         self.draw = ImageDraw.Draw(self.image)
@@ -57,10 +62,14 @@ class KidsDrawingApp:
         # Buttons and Options
         self.create_widgets()
 
-        # Bind mouse events to canvas
-        self.canvas.bind("<ButtonPress-1>", self.start_drawing)
-        self.canvas.bind("<B1-Motion>", self.draw_on_canvas)
-        self.canvas.bind("<ButtonRelease-1>", self.stop_drawing)
+        # Bind mouse events to the canvas
+        self.canvas.bind("<ButtonPress-1>", self.start_drawing)    # Start drawing when mouse button is pressed
+        self.canvas.bind("<B1-Motion>", self.draw_on_canvas)       # Draw while the mouse is moving (drag)
+        self.canvas.bind("<ButtonRelease-1>", self.finalize_shape) # Finalize shape when the mouse button is released
+
+        # Bind keyboard event to the root window
+        self.root.bind("<e>", self.edit_text)  # Bind the "E" key for editing text
+
 
         # Track completed pages
         self.completed_pages = {"Level 1 - Easy": [False] * 6,
@@ -76,16 +85,24 @@ class KidsDrawingApp:
         toolbar = tk.Frame(self.root)
         toolbar.pack(side=tk.TOP, fill=tk.X)
 
-        # Display coins
-        self.coins_label = tk.Label(toolbar, text=f"Coins: {self.coins}", font=("Arial", 14))
+        # Load and resize the coin icon using PIL (make sure to use the correct file path)
+        coin_img = Image.open("coin_icon2.jpg").resize((30, 25), Image.Resampling.LANCZOS)
+        self.coin_icon = ImageTk.PhotoImage(coin_img)
+
+        # Create a label to display coins with the icon
+        self.coins_label = tk.Label(toolbar, image=self.coin_icon, text=f"Coins: {self.coins}", compound=tk.LEFT, font=("Arial", 14))
         self.coins_label.pack(side=tk.TOP, padx=1)
 
         # Open Folder Button
         gallery_button = tk.Button(toolbar, text="Open Folder", command=self.open_gallery)
         gallery_button.pack(side=tk.LEFT, padx=1)
 
-        # Timer Label
-        self.timer_label = tk.Label(toolbar, text="Timer: 30:00", font=("Arial", 14))
+        # Load and resize the timer icon using PIL
+        timer_img = Image.open("timer_icon.png").resize((20, 20), Image.LANCZOS)
+        self.timer_icon = ImageTk.PhotoImage(timer_img)
+
+        # Create a timer label with the icon
+        self.timer_label = tk.Label(toolbar, image=self.timer_icon, text=f"Timer: {self.timer}", compound=tk.LEFT, font=("Arial", 14))
         self.timer_label.pack(side=tk.TOP, padx=1)
 
         # Brush Size Slider
@@ -95,39 +112,71 @@ class KidsDrawingApp:
         size_slider.bind("<Motion>", self.change_brush_size)
 
         # Color Button
-        color_button = tk.Button(toolbar, text="Choose Color", command=self.choose_color)
-        color_button.pack(side=tk.LEFT, padx=1)
+        color_img = Image.open("choosecolor_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the color icon
+        self.color_icon = ImageTk.PhotoImage(color_img)  # Create PhotoImage object
 
-        # Eraser Button
-        self.eraser_button = tk.Button(toolbar, text="Eraser", command=self.toggle_eraser)
+        color_button = tk.Button(toolbar, image=self.color_icon, command=self.choose_color)  # Create the button with the icon
+        color_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
+
+        # Shape Buttons
+        circle_button = tk.Button(toolbar, text="Circle", command=lambda: self.select_shape('circle'))
+        circle_button.pack(side=tk.LEFT, padx=1)
+
+        rectangle_button = tk.Button(toolbar, text="Rectangle", command=lambda: self.select_shape('rectangle'))
+        rectangle_button.pack(side=tk.LEFT, padx=1)
+
+        line_button = tk.Button(toolbar, text="Line", command=lambda: self.select_shape('line'))
+        line_button.pack(side=tk.LEFT, padx=1)
+
+        # Load and resize the eraser icon using PIL (with the correct resampling method)
+        eraser_img = Image.open("eraser_icon.png").resize((20, 20), Image.Resampling.LANCZOS)
+        self.eraser_icon = ImageTk.PhotoImage(eraser_img)
+
+        # Create the Eraser button with the icon
+        self.eraser_button = tk.Button(toolbar, image=self.eraser_icon, command=self.toggle_eraser)
         self.eraser_button.pack(side=tk.LEFT, padx=1)
 
         # Save Button
-        save_button = tk.Button(toolbar, text="Save Drawing", command=self.save_drawing)
-        save_button.pack(side=tk.LEFT, padx=1)
+        save_img = Image.open("save_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the save icon
+        self.save_icon = ImageTk.PhotoImage(save_img)  # Create PhotoImage object
+
+        save_button = tk.Button(toolbar, image=self.save_icon, command=self.save_drawing)  # Create the button with the icon
+        save_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
         # Clear Button
         clear_button = tk.Button(toolbar, text="Clear", command=self.clear_canvas)
         clear_button.pack(side=tk.LEFT, padx=1)
 
         # Undo Button
-        undo_button = tk.Button(toolbar, text="Undo", command=self.undo)
-        undo_button.pack(side=tk.LEFT, padx=1)
+        undo_img = Image.open("undo_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the undo icon
+        self.undo_icon = ImageTk.PhotoImage(undo_img)  # Create PhotoImage object
 
-        # Brush Mode
-        self.brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)
-        self.brush_button.pack(side=tk.LEFT)
+        undo_button = tk.Button(toolbar, image=self.undo_icon, command=self.undo)  # Create the button with the icon
+        undo_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
-        # Text Mode
-        self.text_button = tk.Button(root, text="Text Mode", command=self.activate_text_mode)
-        self.text_button.pack(side=tk.LEFT)
+        # Brush Button
+        brush_img = Image.open("brush_icon2.png").resize((20, 20), Image.LANCZOS)  # Load and resize the brush icon
+        self.brush_icon = ImageTk.PhotoImage(brush_img)  # Create PhotoImage object
+
+        brush_button = tk.Button(toolbar, image=self.brush_icon, command=lambda: self.set_shape_mode(None))  # Create the button with the icon
+        brush_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
+
+        brush_button = tk.Button(root, text="Brush Mode", command=self.activate_brush_mode)  # Create the button with the icon
+        brush_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
+
+        # Text Mode Button
+        text_img = Image.open("text_icon.png").resize((20, 20), Image.LANCZOS)  # Load and resize the text icon
+        self.text_icon = ImageTk.PhotoImage(text_img)  # Create PhotoImage object
+
+        self.text_button = tk.Button(root, image=self.text_icon, command=self.activate_text_mode)  # Create the button with the icon
+        self.text_button.pack(side=tk.LEFT, padx=1)  # Pack the button in the toolbar
 
         # Blank Page Button
         blank_page_button = tk.Button(toolbar, text="Blank Page", command=self.blank_page)
-        blank_page_button.pack(side=tk.LEFT, padx=1)
+        blank_page_button.pack(side=tk.LEFT)
         
         # Background Button
-        bg_button = tk.Button(toolbar, text="Change Background", command=self.change_background)
+        bg_button = tk.Button(root, text="Change Background", command=self.change_background)
         bg_button.pack(side=tk.LEFT, padx=1)
 
         # Mini Picture Section
@@ -138,7 +187,7 @@ class KidsDrawingApp:
         self.mini_pics_frame.pack(side=tk.TOP, fill=tk.X)
 
         self.selected_frame = tk.Frame(right_frame)
-        self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        self.selected_frame.pack(side=tk.BOTTOM, fill=tk.X) #Make outline images
 
         self.load_mini_pictures()
 
@@ -148,6 +197,40 @@ class KidsDrawingApp:
         self.image.save(state, format="PNG")
         self.undo_stack.append(state.getvalue())
         self.redo_stack.clear()  # Clear redo stack on new action
+
+    def select_shape(self, shape):
+        """ Select the shape tool to draw """
+        self.shape_mode = shape  # Set the shape mode
+        self.drawing = False  # Disable drawing mode when selecting shape
+
+    def place_text(self, event, text):
+        x, y = event.x, event.y
+        font_size = 20
+        font = ("Arial", font_size)
+
+        # Draw the text on the canvas
+        self.last_text_id = self.canvas.create_text(x, y, text=text, font=font, fill=self.color)
+
+        # Also draw the text on the image to ensure it's saved
+        self.draw.text((x, y), text, font=None, fill=self.color)
+
+        # Unbind the click event after placing the text (Text mode ends)
+        self.canvas.unbind("<Button-1>")
+
+        # Rebind the brush tool (Enable brush mode again)
+        self.bind_brush()
+
+    def edit_text(self, event):
+        if self.last_text_id is not None:
+            current_text = self.canvas.itemcget(self.last_text_id, 'text')
+            new_text = simpledialog.askstring("Edit Text", "Enter new text:", initialvalue=current_text)
+
+            if new_text is not None:
+                # Update the text on the canvas
+                self.canvas.itemconfig(self.last_text_id, text=new_text)
+
+                # Also update the drawn image if needed
+                self.draw.text((self.canvas.coords(self.last_text_id)[0], self.canvas.coords(self.last_text_id)[1]), new_text, font=None, fill=self.color)
 
     def open_gallery(self):
         # Open a folder with saved drawings
@@ -371,8 +454,65 @@ class KidsDrawingApp:
             else:
               messagebox.showinfo("Cancelled","Unlock cancelled")
         else:
-            messagebox.showerror("Not enough coins",f"You need {coins_required} coins to unlock this page.")    
+            challenge_response=messagebox.askyesno("Challenge",f"Do you want to complete a challenge to unlock Page {i} in {level} for free ?")
 
+        if challenge_response:
+            #display question
+            self.generate_challenge()
+            messagebox.showinfo("Challenge",f"Answer this question to unlock this page:\n\n{self.challenge_question}")   
+            user_input=simpledialog.askstring("Challenge","Enter your response:") 
+
+            if self.check_user_input(user_input):
+                label=self.widget_dict.get((level,i))
+                lock_label=self.widget_dict.get((level,i,'lock'))
+
+                unlock_button=self.widget_dict.get((level,i,'unlock'))
+                if unlock_button:
+                    unlock_button.grid_forget()
+                    self.widget_dict.pop((level,i,'unlock'))
+
+                    # create complete button
+                    complete_button=tk.Button(level_frame,text="Complete", command=lambda level=level,i=i:self.complete_page(level,i))
+                    complete_button.grid(row=i // 6 + 1,column=i % 6, padx=5, pady=3)
+                    self.complete_buttons[(level,i)]=complete_button
+
+                if lock_label:
+                  #debug issues
+                    print(f"Lock label found for ({level},{i})")
+                    lock_label.destroy()
+                    print(f"Lock label destroyed for ({level,{i}})")
+                else:
+                    print(f"No lock label found for ({level},{i})")
+
+                if label:
+                        label.config(state="normal")
+                        message=f"Page {i} in {level} has been unlocked !\nYou earned 10 coins for completing the challenge"
+                        messagebox.showinfo("Success",message)
+                        self.coins += 10
+                        self.coins_label.config(text=f"Coins: {self.coins}")
+                else:
+                        messagebox.showerror("Error","Page label not found")
+            else:
+                       messagebox.showerror("Error", "Incorrect response.Try againn !")  
+        else:
+                messagebox.showerror("Not enough coins", f"You need {coins_required} coins to unlock this page !")         
+
+    def generate_challenge(self):
+        questions=[
+            ("What has hands and a face,but can't hold anything or smile ?","clock"),
+            ("I have a tail and a head,but no body.What am I ?","coin"),
+            ("What has keys but can't open locks?","piano"),
+            ("What gets wet as it dries ?","towel"),
+            ("What comes down but never goes up ?","rain"),
+            ("I go up and down but never move,what am I ? ", "staircase")
+        ]           
+        question,answer=random.choice(questions) 
+        self.challenge_question=question
+        self.challenge_answer=answer
+
+    def check_user_input(self,user_input):
+        return user_input.strip() == self.challenge_answer.strip()
+        
 
     def complete_page(self, level, i):
         if not self.completed_pages[level][i]:
@@ -514,47 +654,89 @@ class KidsDrawingApp:
                 messagebox.showinfo("Time's Up", "The 30-minute timer has ended!")
                 self.root.destroy()
 
+    def set_shape_mode(self, shape):
+       """ Set the current shape mode for drawing """
+       self.shape_mode = shape
+       self.eraser_mode = False  # Disable eraser mode when in shape mode
+       self.eraser_button.config(relief=tk.RAISED)  # Reset eraser button appearance
+
     def start_drawing(self, event):
-        if self.mode == 'brush' and not self.eraser_mode:
-            self.drawing = True
-            self.previous_x, self.previous_y = event.x, event.y
-            self.save_state()  # Save state before drawing starts
-        elif self.mode == 'brush' and self.eraser_mode:
-            self.drawing = True
-            self.previous_x, self.previous_y = event.x, event.y
-            self.save_state()  # Save state before erasing starts
+       self.drawing = True
+       self.start_x = event.x
+       self.start_y = event.y
+       self.save_state()  # Save state before drawing
 
     def stop_drawing(self, event):
-        if self.mode == 'brush':
-            self.drawing = False
-        self.previous_x, self.previous_y = None, None  # Reset previous points
+       if self.shape_mode:  # Check if a shape is being drawn
+        end_x = event.x
+        end_y = event.y
+        self.draw_shape(self.shape_mode, self.start_x, self.start_y, end_x, end_y)
+        self.drawing = False
+        self.canvas.delete("temp")  # Clear temporary shape
 
     def draw_on_canvas(self, event):
-        """ Draw on the canvas, handling both brush and eraser modes """
-        x1, y1 = (event.x - self.brush_size), (event.y - self.brush_size)
-        x2, y2 = (event.x + self.brush_size), (event.y + self.brush_size)
+       """ Draw on the canvas, handling both brush, eraser, and shape modes """
+       if self.shape_mode:
+        # Remove only the shape that is currently being drawn (for smooth drawing effect)
+        self.canvas.delete("current_temp")  # Clear the currently drawn temporary shape
 
-        # Check if the mode is eraser
-        if self.eraser_mode:
-            size = self.eraser_size  # Use eraser size when eraser is active
-            color = "white"  # Eraser color (background color)
-        else:
-            size = self.brush_size  # Use brush size otherwise
-            color = self.color
+        # Draw shapes based on the selected shape mode
+        if self.shape_mode == 'circle':
+            self.canvas.create_oval(self.start_x, self.start_y, event.x, event.y, 
+                                    outline=self.color, width=self.brush_size, tags="current_temp")
+        elif self.shape_mode == 'rectangle':
+            self.canvas.create_rectangle(self.start_x, self.start_y, event.x, event.y, 
+                                         outline=self.color, width=self.brush_size, tags="current_temp")
+        elif self.shape_mode == 'line':
+            self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, 
+                                    fill=self.color, width=self.brush_size, tags="current_temp")
+       else:
+        # Brush and eraser functionality
+        size = self.eraser_size if self.eraser_mode else self.brush_size
+        color = "white" if self.eraser_mode else self.color
 
+        # Calculate the coordinates for the brush or eraser
         x1, y1 = (event.x - size), (event.y - size)
         x2, y2 = (event.x + size), (event.y + size)
 
-    # Draw on canvas
+        # Draw on canvas for brush or eraser
         self.canvas.create_oval(x1, y1, x2, y2, fill=color, outline=color)
 
-    # Also draw on the image for saving purposes
+        # Also draw on the image for saving purposes
         self.draw.ellipse([x1, y1, x2, y2], fill=color)
 
-    # Eraser size slider
-        self.eraser_size_slider = tk.Scale(self, from_=1, to=50, orient="horizontal", label="Eraser Size")
-        self.eraser_size_slider.set(self.eraser_size)  # Set default value
-        self.eraser_size_slider.pack()
+    def finalize_shape(self, event):
+       """ Make the drawn shape permanent when the mouse is released """
+       if self.shape_mode:
+        # Draw the shape permanently on canvas and image
+        self.draw_shape(self.shape_mode, self.start_x, self.start_y, event.x, event.y)
+
+        # Clear the temporary shape
+        self.canvas.delete("current_temp")
+
+    def draw_shape(self, shape, start_x, start_y, end_x, end_y):
+       """ Draws the selected shape on both the canvas and the internal image """
+       if shape == 'circle':
+        # Draw the circle on the canvas
+        self.canvas.create_oval(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+        # Draw the circle on the image
+        self.draw.ellipse([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+    
+       elif shape == 'rectangle':
+        # Draw the rectangle on the canvas
+        self.canvas.create_rectangle(start_x, start_y, end_x, end_y, outline=self.color, width=self.brush_size)
+        # Draw the rectangle on the image
+        self.draw.rectangle([start_x, start_y, end_x, end_y], outline=self.color, width=self.brush_size)
+    
+       elif shape == 'line':
+        # Draw the line on the canvas
+        self.canvas.create_line(start_x, start_y, end_x, end_y, fill=self.color, width=self.brush_size)
+        # Draw the line on the image
+        self.draw.line([start_x, start_y, end_x, end_y], fill=self.color, width=self.brush_size)
+    
+       # After drawing the shape, update the canvas to reflect the new changes
+       self.update_canvas()
+
 
     # Update eraser size when slider is changed
     def update_eraser_size(self, value):
