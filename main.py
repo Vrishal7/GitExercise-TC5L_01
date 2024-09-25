@@ -109,10 +109,6 @@ class KidsDrawingApp:
         self.timer_label = tk.Label(toolbar, image=self.timer_icon, text=f"Timer: {self.timer}", compound=tk.LEFT, font=("Arial", 14))
         self.timer_label.pack(side=tk.TOP, padx=1)
 
-        # Button to set custom time
-        self.set_time_button = tk.Button(toolbar, text="Set Timer", command=self.set_custom_timer)
-        self.set_time_button.pack(side=tk.LEFT, padx=1)
-
         # Brush Size Slider
         size_slider = tk.Scale(toolbar, from_=1, to=10, orient=tk.HORIZONTAL, label="Brush Size")
         size_slider.set(self.brush_size)
@@ -454,7 +450,7 @@ class KidsDrawingApp:
 
         for level, mini_pics in levels.items():
             # Create a label for the level
-            level_label = tk.Label(self.mini_pics_frame, text=level, font=("Arial", 12, "bold"))
+            level_label = tk.Label(self.mini_pics_frame, text=level, font=("Arial", 10, "bold"))
             level_label.pack(side=tk.TOP, anchor=tk.W, pady=5)
 
             # Create a frame for this level's images
@@ -749,7 +745,7 @@ class KidsDrawingApp:
             messagebox.showerror("Error", f"Failed to show selected images: {e}")
 
     def set_custom_timer(self):
-    # Ask the user to input time (in minutes)
+       # Ask the user to input time (in minutes)
        custom_time = simpledialog.askinteger("Set Timer", "Enter time duration in minutes:", minvalue=1, maxvalue=1440)
        if custom_time:
         self.timer_duration = custom_time * 60  # Convert to seconds
