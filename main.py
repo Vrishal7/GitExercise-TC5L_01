@@ -916,6 +916,12 @@ class KidsDrawingApp:
         self.save_state()  # Save current state before creating a blank page
         self.clear_canvas()  # Clear the current canvas
 
+    def blank_page(self):
+        """ Create a new blank page """
+        self.save_state()  # Save current state before creating a blank page
+        self.clear_canvas()  # Clear the current canvas
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = KidsDrawingApp(root)
